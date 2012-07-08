@@ -15,6 +15,11 @@ var cfg = {
  *    comments:
  *  }
  *
+ *  hosts: {
+ *    url:
+ *    count:
+ *    score:
+ *  }
  *
  *  source: {
  *    url:
@@ -49,17 +54,28 @@ exports.init = function (cb, cberr) {
       coll.ensureIndex({ 'name': 1 }, function () {});
       coll.ensureIndex({ 'sources': 1 }, function () {});
 
-      db.collection('sources', function (err, coll) {
+      db.collection('hosts', function (err, coll) {
         if(err) {
           cberr(2, err);
           return;
         }
 
-        d.sources = coll;
+        d.hosts = coll;
         coll.ensureIndex({ 'url' : 1 }, { unique: true, dropDups: true }, function() {});
-        coll.ensureIndex({ 'date' : 1 }, function () {});
+        //coll.ensureIndex({ 'date' : 1 }, function () {});
 
-        cb();
+        db.collection('sources', function (err, coll) {
+          if(err) {
+            cberr(3, err);
+            return;
+          }
+
+          d.sources = coll;
+          coll.ensureIndex({ 'url' : 1 }, { unique: true, dropDups: true }, function() {});
+          coll.ensureIndex({ 'date' : 1 }, function () {});
+
+          cb();
+        });
       });
     });
   });

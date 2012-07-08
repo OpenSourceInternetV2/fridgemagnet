@@ -2,9 +2,11 @@
 var cfg = {
   nRequest: 30,
   urlSize: 128,
+  hostCount: 1000,
+  hostScore: 1,
 
   banish:
-    /twitter|facebook|google|youtube|deezer|dailymotion|vimeo|identi.ca|wikipedia|amazon|ebay|imdb|vimeo|itunes|apple|manual|reference|rediff|myspace|hotmail|digg|thumblr|flickr|bbc\.co|(\.gov$)|reddit|adverti(s|z)ing/i,
+    /twitter|facebook|linkedin|google|youtube|deezer|dailymotion|vimeo|identi.ca|wikipedia|amazon|ebay|imdb|vimeo|itunes|apple|manual|reference|rediff|myspace|hotmail|digg|thumblr|flickr|bbc\.co|(\.gov$)|reddit|adverti(s|z)ing|soir\.be|nytime/i,
 }
 
 var http = require('http');
@@ -12,7 +14,7 @@ var url = require('url');
 var db = require('./common/db.js');
 
 const links = /\shref=\"[^"]+/gi;
-const magnets = /magnet:[^\s"]+/gi;
+const magnets = /magnet:[^\s"\]]+/gi;
 
 
 
@@ -22,6 +24,8 @@ function Request (u) {
 }
 
 Request.prototype = {
+  score: 0,
+
   get url () {
     return this._u;
   },
@@ -84,6 +88,7 @@ Request.prototype = {
   analyze: function () {
     var list = this.body.match(magnets);
     if(list) {
+      this.score = list.length;
       for(var i = 0; i < list.length; i++)
         crawler.magnet(this, list[i]);
     }
@@ -160,7 +165,6 @@ crawler = {
           try {
             var u = list[i].url
 
-            console.log('start: ' + u);
             db.sources.update({ url: u }, {$set: {date: Date.now() }});
             u = new Request(u);
 
@@ -174,7 +178,11 @@ crawler = {
 
 
   done: function (r) {
-    console.log('> ' + r.url);
+    if(r.body && r.body.length)
+      console.log('< ' + r.url);
+
+    db.hosts.insert({ url: r.options.host, count: 0, score: 0 });
+    db.hosts.update({ url: r.options.host }, { $inc: { score: r.score, count: 1 }});
     this.n--;
   },
 
@@ -190,7 +198,12 @@ crawler = {
     if(!h || h.search(cfg.banish) != -1)
       return;
 
-    db.sources.insert({ url: u });
+    db.sources.findOne({ url: u }, function (err, d) {
+      if(d && d.count >= cfg.hostCount &&
+         (d.score / d.count) < (cfg.hostScore / cfg.hostCound))
+        return;
+      db.sources.insert({ url: u });
+    });
   },
 
 
