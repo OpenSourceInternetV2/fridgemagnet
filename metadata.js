@@ -23,7 +23,8 @@ var manager = {
 
   set: function (u, n) {
     console.log(n);
-    db.magnets.update({ magnet: u }, { $set: { name: n } });
+    db.magnets.update({ magnet: u },
+      { $set: { name: n, keywords: n.toLowerCase().split(/(\W/) } });
   },
 
 
@@ -40,11 +41,13 @@ var manager = {
           return;
         }
 
+        manager.n += list.length;
         for(var i = 0; i < list.length; i++) {
           var q = qr.parse(list[i].magnet);
 
           if(q.dn) {
             manager.set(list[i].magnet, q.dn);
+            manager.n--;
             continue;
           }
 

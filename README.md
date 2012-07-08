@@ -7,5 +7,5 @@ this project requires mongodb to run. Configure the scripts using common/config.
 
 
 * crawler.js: run this script with the url list as arguments
-
+* metadata.js: metadata system
 
