@@ -1,10 +1,10 @@
 #! /usr/bin/env node
 var cfg = {
-  nRequest: 10,
+  nRequest: 30,
   urlSize: 128,
 
   banish:
-    /twitter|facebook|google|youtube|deezer|dailymotion|vimeo|identi.ca|wikipedia|amazon|ebay|imdb|vimeo|itunes|apple|manual|reference|rediff|thumblr|bbc\.co|(\.gov$)/i,
+    /twitter|facebook|google|youtube|deezer|dailymotion|vimeo|identi.ca|wikipedia|amazon|ebay|imdb|vimeo|itunes|apple|manual|reference|rediff|myspace|hotmail|digg|thumblr|flickr|bbc\.co|(\.gov$)|reddit|adverti(s|z)ing/i,
 }
 
 var http = require('http');
@@ -12,6 +12,7 @@ var url = require('url');
 var db = require('./common/db.js');
 
 const links = /\shref=\"[^"]+/gi;
+const magnets = /magnet:[^\s"]+/gi;
 
 
 
@@ -81,7 +82,14 @@ Request.prototype = {
 
 
   analyze: function () {
-    var list = this.body.match(links);
+    var list = this.body.match(magnets);
+    if(list) {
+      for(var i = 0; i < list.length; i++)
+        crawler.magnet(this, list[i]);
+    }
+
+
+    list = this.body.match(links);
     if(!list)
       return;
 
@@ -91,10 +99,8 @@ Request.prototype = {
 
     for(var i = 0; i < list.length; i++) {
       var u = url.parse(list[i].substring(7));
-      if(u.protocol == 'magnet:') {
-        crawler.magnet(this, u.href);
+      if(u.protocol == 'magnet:')
         continue;
-      }
 
       //relative
       if(!u.protocol) {
@@ -140,8 +146,6 @@ crawler = {
     var q = { date: null };
     if(t)
       q = {};
-
-    console.log(cfg.nRequest - this.n);
 
     db.sources.find(q, { limit: cfg.nRequest - this.n })
       .sort({ date: -1 })
