@@ -42,18 +42,18 @@ Request.prototype = {
     function (r) {
       if(r.statusCode && r.statusCode != 200) {
         if(r.statusCode >= 400)
-          crawler.done(rq);
+          manager.done(rq);
         else (r.statusCode >= 300)
           try {
-            crawler.todo(r.headers.location);
-            crawler.done(rq);
+            manager.todo(r.headers.location);
+            manager.done(rq);
           }
           catch(e) {}
         return;
       }
 
       if(!r.headers['content-type'] || r.headers['content-type'].search(/html/i) == -1) {
-        crawler.fail(rq);
+        manager.fail(rq);
         req.end();
         return;
       }
@@ -65,14 +65,14 @@ Request.prototype = {
       .on('end', function () {
         if(rq.body.length)
           rq.analyze();
-        crawler.done(rq);
+        manager.done(rq);
       })
       .on('error', function () {
-        crawler.done(rq);
+        manager.done(rq);
       });
     })
     .on('error', function (e) {
-      crawler.done(rq);
+      manager.done(rq);
     });
   },
 
@@ -82,7 +82,7 @@ Request.prototype = {
     if(list) {
       this.score = list.length;
       for(var i = 0; i < list.length; i++)
-        crawler.magnet(this, list[i]);
+        manager.magnet(this, list[i]);
     }
 
 
@@ -111,7 +111,7 @@ Request.prototype = {
       else
         u = u.href;
 
-      crawler.todo(u);
+      manager.todo(u);
     }
   },
 }
@@ -119,7 +119,7 @@ Request.prototype = {
 
 
 //------------------------------------------------------------------------------
-crawler = {
+manager = {
   _n: 0,
 
   get n() {
@@ -129,7 +129,7 @@ crawler = {
   set n(v) {
     if(v <= 0) {
       this._n = 0;
-      crawler.next();
+      this.next();
     }
     else
       this._n = v;
@@ -137,19 +137,18 @@ crawler = {
 
 
   next: function (t) {
-    if(this.n == cfg.nRequest)
+    if(this.n >= cfg.nRequests)
       return;
 
     var q = { date: null };
     if(t)
       q = {};
 
-    db.sources.find(q, { limit: cfg.nRequest - this.n })
+    db.sources.find(q, { limit: cfg.nRequests - this.n })
       .sort({ date: -1 })
       .toArray(function (err, list) {
         if(err || !list.length) {
-          console.log('error:' + err);
-          crawler.next(true);
+          manager.next(true);
           return;
         }
 
@@ -163,7 +162,7 @@ crawler = {
             this.n++;
           }
           catch(e) {
-            crawler.fail(list[i].url);
+            manager.fail(list[i].url);
           }
       });
   },
@@ -187,8 +186,8 @@ crawler = {
 
   todo: function (u) {
     var h = url.parse(u).host;
-/*    if(!h || h.search(cfg.banish) != -1)
-      return;*/
+    if(!h || h.search(cfg.banish) != -1)
+      return;
 
     db.hosts.findOne({ url: h }, function (err, d) {
       if(d && d.count >= cfg.hostCount &&
@@ -220,11 +219,11 @@ db.init(function () {
     for(var i = 2; i < process.argv.length; i++)
       db.sources.insert({ url: process.argv[i] }, function () {
         if(--n <= 0)
-          crawler.next();
+          manager.next();
       });
   }
   else
-    crawler.next();
+    manager.next();
 },
 function (n, e) {
   console.log('Error ' + n + ': ' + e);
