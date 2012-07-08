@@ -1,9 +1,4 @@
-var cfg = {
-  db: 'magnetizor',
-  host: 'localhost',
-  port: 27017,
-  options: { auto_reconnect: true, strict: false },
-}
+var cfg = require('./config.js').db;
 
 /*
  *  magnet: {
@@ -29,10 +24,10 @@ var cfg = {
 
 var mongo = require('mongodb');
 var Server = mongo.Server;
-var Db = mongo.Db;
+var DB = mongo.Db;
 
 var server = new Server(cfg.host, cfg.port, cfg.options);
-var db = new Db(cfg.db, server);
+var db = new DB(cfg.db, server);
 
 exports.init = function (cb, cberr) {
   var d = this;

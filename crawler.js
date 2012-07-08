@@ -1,21 +1,13 @@
 #! /usr/bin/env node
-var cfg = {
-  nRequest: 30,
-  urlSize: 128,
-  hostCount: 1000,
-  hostScore: 1,
-
-  banish:
-    /twitter|facebook|linkedin|google|youtube|deezer|dailymotion|vimeo|identi.ca|wikipedia|amazon|ebay|imdb|vimeo|itunes|apple|manual|reference|rediff|myspace|hotmail|digg|thumblr|flickr|bbc\.co|(\.gov$)|reddit|adverti(s|z)ing|soir\.be|nytime/i,
-}
-
 var http = require('http');
 var url = require('url');
+
+var cfg = require('./common/config.js').crawler;
 var db = require('./common/db.js');
+
 
 const links = /\shref=\"[^"]+/gi;
 const magnets = /magnet:[^\s"\]]+/gi;
-
 
 
 //------------------------------------------------------------------------------
@@ -195,12 +187,12 @@ crawler = {
 
   todo: function (u) {
     var h = url.parse(u).host;
-    if(!h || h.search(cfg.banish) != -1)
-      return;
+/*    if(!h || h.search(cfg.banish) != -1)
+      return;*/
 
-    db.sources.findOne({ url: u }, function (err, d) {
+    db.hosts.findOne({ url: h }, function (err, d) {
       if(d && d.count >= cfg.hostCount &&
-         (d.score / d.count) < (cfg.hostScore / cfg.hostCound))
+         (d.score / d.count) < cfg.hostScore)
         return;
       db.sources.insert({ url: u });
     });
