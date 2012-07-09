@@ -47,23 +47,42 @@ function xhrGet(url, onSuccess, onFail) {
 }
 
 function percentEncode(q) {
-  return q.replace(/\W/g, '+');
+  return q; //.replace(/\W/g, '+');
 }
 
 
 
+//------------------------------------------------------------------------------
+var query = {
+  search: null,
+  query: null,
+};
 
-function search_ (u) {
+
+function search_ (u, iu) {
+  query.loading = true;
+  query.fail = false;
+
+  if(!iu)
+    iu = u;
+
   //FIXME: eventual conflict → verify current query before
   xhrGet(cfg.server + 'search/?' + u, function (rq) {
-    location.hash = "#" + u;
+    if(iu != query.query)
+      return;
+
     $('dainput').setAttribute('search', '1');
 
     var list = JSON.parse(rq.responseText);
     if(!list.length) {
-      $('list').innerHTML = '0 results :(';
+      if(query.count)
+        query.fail = true;
+      else
+        $('list').innerHTML = '0 results :(';
+      query.loading = false;
       return;
     }
+
 
     var fr = document.createDocumentFragment();
     for(var i = 0; i < list.length; i++) {
@@ -80,21 +99,30 @@ function search_ (u) {
       );
     }
 
-    $('list').innerHTML = '';
     $('list').appendChild(fr);
+    query.count = $('list').childNodes.length;
+    query.loading = false;
   });
 }
 
-function search (q, s, l) {
-  var u = 'q=' + percentEncode(q);
 
-  if(s) u += '&s=' + s;
-  if(l) u += '&l=' + l;
+function search (s, r) {
+  query.search = s;
+  query.query = 'q=' + percentEncode(s);
 
-  search_(u);
+  if(!r) {
+    var stateObj = {};
+    history.pushState(stateObj, s, '?' + query.query);
+  }
+
+  $('list').innerHTML = '';
+  search_(query.query);
 }
 
 
+function next () {
+  search_(query.query + '&s=' + query.count, query.query);
+}
 
 
 function init() {
@@ -107,14 +135,29 @@ function init() {
       search(e.target.value);
   }, false);
 
+  document.addEventListener('scroll', function (e) {
+    if(!query.loading && !query.fail &&
+       window.scrollY + window.innerHeight > document.body.clientHeight - 80)
+      next();
+
+  }, false);
+
+
+/*  document.body.addEventListener('keydown', function (e) {
+    if(e.keyCode == 13 || e.target.tagName == 'INPUT' ||
+       e.target.tagName == 'TEXTAREA')
+      return;
+
+    $('search-input').focus();
+  }, true);*/
+
   // search and stats
   xhrGet(cfg.server + 'stats', function (rq) {
     rq = JSON.parse(rq.responseText);
     $('stats').innerHTML = rq.m + ' magnets - ' + rq.s + ' pages / ' + rq.t;
   });
 
-  if(location.hash && location.hash.length > 1) {
-    search_(location.hash.substr(1));
-  }
+  if(location.search && location.search.length > 1)
+    search(location.search.substr(1), true);
 }
 

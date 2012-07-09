@@ -98,14 +98,19 @@ input[type="text"]:focus { color: black; }
 /*
  *  item
  */
-.item,
-.item .sources a {
+.item {
+  margin-bottom: 1em;
+}
+
+.item, .item .sources a {
   font-size: 10pt;
   color: rgb(180, 180, 180);
 }
 
 .item .sources a {
   margin-right: 1em;
+  text-decoration: none;
+  font-style: italic;
 }
 
 .item .name {
@@ -121,7 +126,7 @@ input[type="text"]:focus { color: black; }
   width: 50%;
   margin: auto;
 
-  margin-top: 3em;
+  margin-top: 100px;
   padding: 1em;
   border-top: 1px rgb(140, 200, 200) solid;
 
