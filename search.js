@@ -70,8 +70,9 @@ server = http.createServer(function(rq, r) {
 
       //TODO: http://stackoverflow.com/questions/9822910/mongo-custom-multikey-sorting
       //      (when 2.1 is out)
+      q.q = q.q.replace(/\W+$/gi, '');
       db.magnets.find({
-          keywords: { $in: q.q.split(/\W+/g) },
+          keywords: { $in: q.q.split(/(\W|\+)+/gi) },
         }, {
           keywords: 0,
           _id: 0,
