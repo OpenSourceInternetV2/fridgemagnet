@@ -1,8 +1,31 @@
-#! /usr/bin/env node
+/*
+fridgemagnet: nodejs magnet search engine tools
+Copyright (C) 2012 - Thomas Baquet <me lordblackfox net>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 var qr = require('querystring');
 
 var db = require('./common/db.js');
-var cfg = require('./common/config.js');
+var cfg = require('./common/config.js').metadata;
+
+
+var log = function () {};
+if(cfg.log)
+  log = function(v) { console.log(v); }
+
 
 var manager = {
   _n: 0,
@@ -22,9 +45,9 @@ var manager = {
 
 
   set: function (u, n) {
-    console.log(n);
+    log(n);
     db.magnets.update({ magnet: u },
-      { $set: { name: n, keywords: n.toLowerCase().split(/(\W/) } });
+      { $set: { name: n, keywords: n.toLowerCase().split(/\W+/) } });
   },
 
 
@@ -32,7 +55,7 @@ var manager = {
     if(this.n >= cfg.nRequests)
       return;
 
-    db.magnets.find({ name: null }, { limit: cfg.nRequests - this.n })
+    db.magnets.find({ name: null })
       .toArray(function (err, list) {
         if(err || !list.length) {
           setTimeout(function () {
@@ -53,6 +76,10 @@ var manager = {
 
           //TODO: launch metadata infos
         }
+
+        setTimeout(function() {
+          manager.next();
+        }, 1000);
       });
   },
 }

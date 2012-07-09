@@ -1,9 +1,32 @@
-#! /usr/bin/env node
+/*
+fridgemagnet: nodejs magnet search engine tools
+Copyright (C) 2012 - Thomas Baquet <me lordblackfox net>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 var http = require('http');
 var url = require('url');
+var qr = require('querystring');
 
-var cfg = require('./common/config.js').crawler;
 var db = require('./common/db.js');
+var cfg = require('./common/config.js').crawler;
+
+
+var log = function () {};
+if(cfg.log)
+  log = function(v) { console.log(v); }
 
 
 const links = /\shref=\"[^"]+/gi;
@@ -45,7 +68,7 @@ Request.prototype = {
           manager.done(rq);
         else (r.statusCode >= 300)
           try {
-            manager.todo(r.headers.location);
+            manager.todo(rq, r.headers.location);
             manager.done(rq);
           }
           catch(e) {}
@@ -68,7 +91,6 @@ Request.prototype = {
         manager.done(rq);
       })
       .on('error', function () {
-        manager.done(rq);
       });
     })
     .on('error', function (e) {
@@ -85,7 +107,6 @@ Request.prototype = {
         manager.magnet(this, list[i]);
     }
 
-
     list = this.body.match(links);
     if(!list)
       return;
@@ -96,7 +117,7 @@ Request.prototype = {
 
     for(var i = 0; i < list.length; i++) {
       var u = url.parse(list[i].substring(7));
-      if(u.protocol == 'magnet:')
+      if(u.protocol == 'magnet:' || u.length > cfg.urlSize)
         continue;
 
       //relative
@@ -111,7 +132,8 @@ Request.prototype = {
       else
         u = u.href;
 
-      manager.todo(u);
+      if(u != this.url)
+        manager.todo(this, u);
     }
   },
 }
@@ -121,6 +143,7 @@ Request.prototype = {
 //------------------------------------------------------------------------------
 manager = {
   _n: 0,
+  list: {},
 
   get n() {
     return this._n;
@@ -140,7 +163,7 @@ manager = {
     if(this.n >= cfg.nRequests)
       return;
 
-    var q = { date: null };
+    var q = { date: null, scanning: null };
     if(t)
       q = {};
 
@@ -149,42 +172,52 @@ manager = {
       .toArray(function (err, list) {
         if(err || !list.length) {
           manager.next(true);
+          log('no data');
           return;
         }
 
-        for(var i = 0; i < list.length; i++)
-          try {
-            var u = list[i].url
+        list.forEach(function(d, i) {
+          var u = d.url;
+          if(manager.list[u])
+            return;
 
-            db.sources.update({ url: u }, {$set: {date: Date.now() }});
-            u = new Request(u);
-
-            this.n++;
-          }
-          catch(e) {
-            manager.fail(list[i].url);
-          }
+          db.sources.update({ url: u }, {$set: { scanning: true }}, function () {
+            try {
+              manager.list[u] = new Request(u);
+              this.n++;
+            }
+            catch(e) {
+              manager.fail(d.url);
+            }
+          });
+        });
       });
   },
 
 
   done: function (r) {
     if(r.body && r.body.length)
-      console.log('< ' + r.url);
+      log('< ' + r.url);
 
+    db.sources.update({ url: r.url },
+        { $set: { date: Date.now() }, $unset: { scanning: 1 }});
     db.hosts.insert({ url: r.options.host, count: 0, score: 0 });
     db.hosts.update({ url: r.options.host }, { $inc: { score: r.score, count: 1 }});
+
+    delete this.list[r.url];
     this.n--;
   },
 
 
   fail: function (r, e) {
-    db.sources.update({ url: r.url }, { $set: { fail: e || true }});
+    db.sources.update({ url: r.url },
+        { $set: { fail: e || true, date: Date.now() }, $unset: { scanning: 1 }});
+    delete this.list[r.url];
     this.n--;
   },
 
 
-  todo: function (u) {
+  todo: function (r, u) {
     var h = url.parse(u).host;
     if(!h || h.search(cfg.banish) != -1)
       return;
@@ -194,15 +227,24 @@ manager = {
          (d.score / d.count) < cfg.hostScore)
         return;
       db.sources.insert({ url: u });
+      db.sources.update({ url: u }, { $addToSet: { sources: r.url }});
     });
   },
 
 
   magnet: function (r, u) {
-    db.magnets.insert({ magnet: u }, function () {
+    var o = { magnet: u };
+    var q = qr.parse(u);
+
+    if(q.dn) {
+      o.name = q.dn;
+      o.keywords = q.dn.toLowerCase().split(/\W+/);
+    }
+
+    db.magnets.insert(o, function () {
       db.magnets.update({ magnet: u }, { $addToSet: { sources: r.url }});
     });
-    console.log('# ' + u);
+    log('# ' + u);
   },
 
 }
@@ -214,16 +256,18 @@ db.init(function () {
   //clean up if change in banish
   //db.sources.remove({ url: cfg.banish });
 
-  if(process.argv.length > 2) {
-    var n = process.argv.length-2;
-    for(var i = 2; i < process.argv.length; i++)
-      db.sources.insert({ url: process.argv[i] }, function () {
-        if(--n <= 0)
-          manager.next();
-      });
-  }
-  else
-    manager.next();
+  db.sources.update({ scanning: true }, { $unset: { scanning: 1 } }, { multi: true }, function () {
+    if(process.argv.length > 2) {
+      var n = process.argv.length-2;
+      for(var i = 2; i < process.argv.length; i++)
+        db.sources.insert({ url: process.argv[i] }, function () {
+          if(--n <= 0)
+            manager.next();
+        });
+    }
+    else
+      manager.next();
+  });
 },
 function (n, e) {
   console.log('Error ' + n + ': ' + e);

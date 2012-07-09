@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf8">
+
+        <link rel="stylesheet" type="text/css" href="style.css">
+
+        <script src="parasol.js"></script>
+        <script src="config.js"></script>
+        <script src="script.js"></script>
+    </head>
+    <body onload="init();">
+        <div id="dainput" class="dainput">
+            <h1>
+                <a href="index.html">
+                    Da fridge research
+                    <img src="logo.png">
+                </a>
+            </h1>
+            <input id="search-input" type="text" placeholder="search" autofocus="autofocus">
+         </div>
+
+         <div id="content">
+             <div id="list">
+             </div>
+         </div>
+
+        <div class="footer">
+            <span id="stats"></span>
+            - we are a search engine, and do not host any content
+        </div>
+
+
+
+        <div style="display:hidden">
+            <div id="list-item" class="item">
+                <a class="name" inherits="name,magnet=href"></a>
+                <div class="sources" inherits="sources"></div>
+            </div>
+        </div>
+    </body>
+</html>
