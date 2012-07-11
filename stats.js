@@ -30,7 +30,6 @@ Session.prototype = {
     this.n++;
   },
 
-
   decode: function(m) {
     var d = {
       action: m.readInt32BE(0),
@@ -109,7 +108,7 @@ Session.prototype = {
     this.id = d.id;
     console.log('# ', this.id);
 
-    this.action(2, new Buffer(this.h));
+    this.action(2, new Buffer(this.h, 'hex'));
   },
 
 
@@ -117,15 +116,17 @@ Session.prototype = {
     var d = this.decode(m);
     if(!d) return;
 
+    console.log(d.stats);
+
     if(this.cb)
       this.cb(this);
   },
 }
 
 
-
-var s = new Session( "tracker.istole.it", 80,
-  "c635de93045eb00d82aeaba77cb7df08a649a888")
+var s = new Session( "tracker.ccc.de", 80,
+"83e73056ed2774734105dec4a9156ef5fbeca1b3" );
+//  "c635de93045eb00d82aeaba77cb7df08a649a888")
 
 
 
