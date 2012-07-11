@@ -89,13 +89,12 @@ function TrackerUDP (magnets, cb) {
         break;
 
       case 2:
-        var ts = parseInt(Date.now()/1000);
         var _ = (m.length - 8) / 3;
         var s = 8 + 0;
         var l = 8 + 2 * _;
 
         for(var i = 0; i < magnets.length; i++) {
-          stats.update(magnets[i].m, ts, m.readInt32BE(s), m.readInt32BE(l));
+          stats.update(magnets[i].m, m.readInt32BE(s), m.readInt32BE(l));
           s+= 4;
           l+= 4;
         }
@@ -110,8 +109,11 @@ function TrackerUDP (magnets, cb) {
     }
   })
   .on('close', function () {
-      cb(success);
+    cb(success, magnets);
   })
+  .on('error', function () {
+    cb(false);
+  });
 
   conn_id = new Buffer([0x00, 0x00, 0x04, 0x17, 0x27, 0x10, 0x19, 0x80]);
   action(0);
@@ -120,30 +122,37 @@ function TrackerUDP (magnets, cb) {
 
 
 var stats = {
-  update: function(m, d, s, l) {
-    if(m.stats) {
-      m.stats.seeders = Math.max(s, m.stats.seeders);
-      m.stats.leechers = Math.max(l, m.stats.leechers);
-    }
-    else
-      m.stats = {
-        date: d,
-        seeders: s,
-        leechers: l,
-      }
+  update: function(m, s, l) {
+    m.stats.seeders = Math.max(s, m.stats.seeders);
+    m.stats.leechers = Math.max(l, m.stats.leechers);
   },
 
   get: function (list, cb) {
-    var min = parseInt(Date.now() / 1000) - 2100;
+    var ts = parseInt(Date.now()/1000);
+    var min = ts - 2100;
     var tr = {};
+    var updated = [];
 
     for(var i = 0; i < list.length; i++) {
-      if(list.stats && list.stats.date >= min)
+      var item = list[i];
+      if(item.stats && item.stats.date >= min)
         continue;
 
-      delete list.stats;
+      updated.push(item);
 
-      var q = list[i].magnet.substr(8);
+      if(item.stats) {
+        item.stats.date = ts;
+        item.stats.seeders = 0;
+        item.stats.leechers = 0;
+      }
+      else
+        item.stats = {
+          date: ts,
+          seeders: 0,
+          leechers: 0,
+        }
+
+      var q = item.magnet.substr(8);
       q = qr.parse(q);
 
       if(!q.tr)
@@ -169,14 +178,19 @@ var stats = {
       return;
     }
 
-    for(var i in tr) {
-      TrackerUDP(tr[i], function() {
+    for(var i in tr)
+      TrackerUDP(tr[i], function(magnets, m) {
+        /*console.log(n);
         n--;
-        //TODO: update database
-        //      min-max between different torrent seeders
+        if(n)
+          return;*/
+
         cb();
+
+        for(var i = 0; i < updated.length; i++)
+          db.magnets.update({ magnet: updated[i].magnet }, { $set: { stats: updated[i].stats } });
       });
-    }
+
   }
 
 }
@@ -233,7 +247,7 @@ server = http.createServer(function(rq, r) {
           keywords: 0,
           _id: 0,
         }, {
-          limit: (q.l < cfg.maxResults && q.l) || 50,
+          limit: 50,
           skip: q.s || 0,
         })
         .toArray(function (err, list) {
@@ -245,22 +259,13 @@ server = http.createServer(function(rq, r) {
             r.end(JSON.stringify(list));
           });
         });
-
       break;
 
-    //FIXME: unused
-    case 'sources':
-      if(!u.query) {
-        r.end('[]');
-        return;
-      }
-
-      db.magnets.findOne({ magnet: u.query }, { sources: 1 }, function (err, doc) {
-        if(err || !doc)
-          r.end('[]');
-        else
-          r.end(JSON.stringify(doc.sources));
-      });
+    case 'note':
+      var m = l[2];
+      db.magnets.update({ magnet: u.query },
+        { $inc: { 'stats.note': (l[2] == '1' ? 1 : 0), 'stats.count': 1 }});
+      r.end('[]');
 
       break;
 

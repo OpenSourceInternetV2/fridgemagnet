@@ -59,15 +59,15 @@ config.init = function () {
    *  plugins.*.enabled
    */
   if(!localStorage.length) {
-    //config('plugin.jamendo', 'true');
   }
   else {
   }
 
-  //config.watch('format.play',        'config-format.play',      'checked');
   config.watch('save.history', 'cfg-history', 'checked', function (e) {
-    if(!e.target.checked)
+    if(!e.target.checked) {
       historic.clear();
+      //config.remove('save.history');
+    }
   });
 }
 

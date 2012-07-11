@@ -23,6 +23,15 @@ function $(i) {
 var ui = {
   item: null,
   historyItem: null,
+
+
+  noteClick: function (e, n) {
+    if(e.parentNode.hasAttribute('noted'))
+      return;
+
+    e.parentNode.setAttribute('noted', '1');
+    note(e.parentNode.getAttribute('magnet'), n);
+  },
 }
 
 
@@ -50,6 +59,9 @@ var historic = {
 
 
   push: function (q) {
+    if(config('save.history') != 'true')
+      return;
+
     var l = config('list.history');
     if(!l)
       config('list.history', JSON.stringify([q]));
@@ -157,7 +169,6 @@ function search_ (u, iu) {
       return;
     }
 
-
     var fr = document.createDocumentFragment();
     for(var i = 0; i < list.length; i++) {
       var s = list[i].sources;
@@ -165,14 +176,20 @@ function search_ (u, iu) {
       for(var j = 0; j < s.length; j++)
         r += '<a href="' + s[j] + '">' + s[j] + '</a>';
 
-      fr.appendChild(
-        ui.item()
+      var stats = list[i].stats;
+      var n = 0;
+      if(stats && stats.count)
+        n = parseInt(stats.note / stats.count * 5)
+
+      var e = ui.item()
           .set('magnet', list[i].magnet)
           .set('name', list[i].name)
           .set('sources', r)
-          .set('seeders', (list[i].stats && list[i].stats.seeders) || 0)
-          .set('leechers',  (list[i].stats && list[i].stats.leechers) || 0)
-      );
+          .set('seeders', (stats && stats.seeders) || 0)
+          .set('leechers',  (stats && stats.leechers) || 0)
+          .set('note', n);
+
+      fr.appendChild(e);
     }
 
     $('list').appendChild(fr);
@@ -198,6 +215,12 @@ function search (s, r) {
 }
 
 
+function note (m, n) {
+  xhrGet(cfg.server + 'note/' + (n ? 1 : -1) + '/?' + m,
+    function (){});
+}
+
+
 function next () {
   search_(query.query + '&s=' + query.count, query.query);
 }
@@ -207,6 +230,7 @@ function init() {
   // items:
   ui.item = parasol($('list-item'));
   ui.historyItem = parasol($('history-item'));
+
 
   // events:
   $('search-input').addEventListener('keyup', function (e) {
@@ -240,14 +264,6 @@ function init() {
   }, false);
 
 
-/*  document.body.addEventListener('keydown', function (e) {
-    if(e.keyCode == 13 || e.target.tagName == 'INPUT' ||
-       e.target.tagName == 'TEXTAREA')
-      return;
-
-    $('search-input').focus();
-  }, true);*/
-
   // search and stats
   xhrGet(cfg.server + 'stats', function (rq) {
     rq = JSON.parse(rq.responseText);
@@ -256,6 +272,7 @@ function init() {
 
   if(location.search && location.search.length > 1)
     search(percentDecode(location.search.substr(3)), true);
+
 
   // other init
   config.init();

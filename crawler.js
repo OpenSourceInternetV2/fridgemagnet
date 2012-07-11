@@ -143,53 +143,41 @@ Request.prototype = {
 //------------------------------------------------------------------------------
 manager = {
   _n: 0,
-  list: {},
-
-  get n() {
-    return this._n;
-  },
-
-  set n(v) {
-    if(v <= 0) {
-      this._n = 0;
-      this.next();
-    }
-    else
-      this._n = v;
-  },
+  list: [],
 
 
   next: function (t) {
-    if(this.n >= cfg.nRequests)
+    if(this.list.length >= cfg.nRequests)
       return;
 
     var q = { date: null, scanning: null };
     if(t)
       q = {};
 
-    db.sources.find(q, { limit: cfg.nRequests - this.n })
+    db.sources.find(q, { limit: cfg.nRequests - this.list.length })
       .sort({ date: -1 })
       .toArray(function (err, list) {
         if(err || !list.length) {
-          manager.next(true);
           log('no data');
+          manager.next(true);
           return;
         }
 
         list.forEach(function(d, i) {
           var u = d.url;
-          if(manager.list[u])
+          if(manager.list.indexOf(u) != -1)
             return;
 
-          db.sources.update({ url: u }, {$set: { scanning: true }}, function () {
-            try {
-              manager.list[u] = new Request(u);
-              this.n++;
-            }
-            catch(e) {
-              manager.fail(d.url);
-            }
-          });
+          if(manager.list.length < cfg.nRequests)
+            db.sources.update({ url: u }, {$set: { scanning: true }}, function () {
+              try {
+                manager.list.push(u);
+                new Request(u);
+              }
+              catch(e) {
+                manager.fail(d.url);
+              }
+            });
         });
       });
   },
@@ -200,20 +188,23 @@ manager = {
       log('< ' + r.url);
 
     db.sources.update({ url: r.url },
-        { $set: { date: Date.now() }, $unset: { scanning: 1 }});
+      { $set: { date: Date.now() }, $unset: { scanning: 1 }},
+      function () {
+        manager.list.splice(manager.list.indexOf(r.url), 1);
+        manager.next();
+      });
     db.hosts.insert({ url: r.options.host, count: 0, score: 0 });
     db.hosts.update({ url: r.options.host }, { $inc: { score: r.score, count: 1 }});
-
-    delete this.list[r.url];
-    this.n--;
   },
 
 
   fail: function (r, e) {
     db.sources.update({ url: r.url },
-        { $set: { fail: e || true, date: Date.now() }, $unset: { scanning: 1 }});
-    delete this.list[r.url];
-    this.n--;
+      { $set: { fail: e || true, date: Date.now() }, $unset: { scanning: 1 }},
+      function () {
+        manager.list.splice(manager.list.indexOf(r.url), 1);
+        manager.next();
+      });
   },
 
 
@@ -224,8 +215,10 @@ manager = {
 
     db.hosts.findOne({ url: h }, function (err, d) {
       if(d && d.count >= cfg.hostCount &&
-         (d.score / d.count) < cfg.hostScore)
-        return;
+         (d.score / d.count) < cfg.hostScore) {
+         //db.sources.remove({ url: RegExp('/^https?:\/\/' + url.replace(/\./, '\\.'), 'gi') });
+         return;
+       }
       db.sources.insert({ url: u });
       db.sources.update({ url: u }, { $addToSet: { sources: r.url }});
     });
@@ -252,6 +245,12 @@ manager = {
 
 
 //------------------------------------------------------------------------------
+function tn() {
+  manager.next();
+  setTimeout(tn, 10000);
+}
+
+
 db.init(function () {
   //clean up if change in banish
   //db.sources.remove({ url: cfg.banish });

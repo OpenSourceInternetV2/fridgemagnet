@@ -12,7 +12,7 @@ exports.db = {
 
 exports.crawler = {
   log: true,
-  nRequests: 15,
+  nRequests: 200,
   urlSize: 128,
   hostCount: 100,
   hostScore: 1 / 50,

@@ -54,7 +54,23 @@
                     <span inherits="leechers"></span>
                 </div>
                 <div>
-                    <a class="name" inherits="name,magnet=href"></a>
+                    <div>
+                        <a class="name" inherits="name,magnet=href"></a>
+                    </div>
+                    <div class="note" inherits="magnet=magnet,note=note,noted=noted">
+                          <a onclick="ui.noteClick(this, false)">&#9785;</a>
+                          <a onclick="ui.noteClick(this, true)">&#9786;</a>
+                          <span style="color:orange;">&#9734;</span>
+                          <span style="color:orange;">&#9734;</span>
+                          <span style="color:orange;">&#9734;</span>
+                          <span style="color:orange;">&#9734;</span>
+                          <span style="color:orange;">&#9734;</span>
+                          <span>&#9734;</span>
+                          <span>&#9734;</span>
+                          <span>&#9734;</span>
+                          <span>&#9734;</span>
+                          <span>&#9734;</span>
+                    </div>
                     <div class="sources" inherits="sources"></div>
                 </div>
             </div>
