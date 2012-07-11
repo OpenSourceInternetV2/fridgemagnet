@@ -23,11 +23,167 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 var http = require('http');
+var dgram = require('dgram');
 var qr = require('querystring');
 var url = require('url');
 
 var db = require('./common/db.js');
 var cfg = require('./common/config.js').search;
+
+//------------------------------------------------------------------------------
+transaction_id = parseInt(Math.random()*100000000);
+
+
+function TrackerUDP (magnets, cb) {
+  var host = magnets[0];
+  var port = magnets[1];
+  var sock = dgram.createSocket('udp4');
+
+  magnets.splice(0,2);
+
+  var conn_id, trans_id;
+
+  function action(a, d) {
+    trans_id = ++transaction_id;
+    var b = new Buffer(8);
+    b.writeInt32BE(a, 0);             //action
+    b.writeInt32BE(trans_id, 4);   //transaction id
+
+    if(!d)
+      b = Buffer.concat([conn_id, b]);
+    else
+      b = Buffer.concat([conn_id, b, d]);
+
+    //console.log('> ', b.length, ' ', b);
+    sock.send(b, 0, b.length, port, host,
+    function(e, b) {
+      if(e)
+        console.log('error: ' + e);
+    });
+  }
+
+  var success = false;
+  sock.on('message', function(m) {
+    var d = {
+      action: m.readInt32BE(0),
+      transaction: m.readInt32BE(4),
+    };
+
+    if(d.transaction != trans_id) {
+      //console.log('not same transaction id ' + d.transaction + ' but should be ' + this.tr);
+      sock.close();
+      return;
+    }
+
+    switch(d.action) {
+      case 0:
+        conn_id = m.slice(8);
+        //scrapp :)
+        //console.log('# ', conn_id);
+        var h = '';
+
+        for(var i = 0; i < magnets.length; i++)
+          h += magnets[i].h;
+
+        action(2, new Buffer(h, 'hex'));
+        break;
+
+      case 2:
+        var ts = parseInt(Date.now()/1000);
+        var _ = (m.length - 8) / 3;
+        var s = 8 + 0;
+        var l = 8 + 2 * _;
+
+        for(var i = 0; i < magnets.length; i++) {
+          stats.update(magnets[i].m, ts, m.readInt32BE(s), m.readInt32BE(l));
+          s+= 4;
+          l+= 4;
+        }
+
+        success = true;
+        sock.close();
+        break;
+
+      case 3:
+        sock.close();
+        return;
+    }
+  })
+  .on('close', function () {
+      cb(success);
+  })
+
+  conn_id = new Buffer([0x00, 0x00, 0x04, 0x17, 0x27, 0x10, 0x19, 0x80]);
+  action(0);
+}
+
+
+
+var stats = {
+  update: function(m, d, s, l) {
+    if(m.stats) {
+      m.stats.seeders = Math.max(s, m.stats.seeders);
+      m.stats.leechers = Math.max(l, m.stats.leechers);
+    }
+    else
+      m.stats = {
+        date: d,
+        seeders: s,
+        leechers: l,
+      }
+  },
+
+  get: function (list, cb) {
+    var min = parseInt(Date.now() / 1000) - 2100;
+    var tr = {};
+
+    for(var i = 0; i < list.length; i++) {
+      if(list.stats && list.stats.date >= min)
+        continue;
+
+      delete list.stats;
+
+      var q = list[i].magnet.substr(8);
+      q = qr.parse(q);
+
+      if(!q.tr)
+        continue;
+
+      for(var j = 0; j < q.tr.length; j++) {
+        var p = url.parse(q.tr[j])
+
+        if(p.protocol == 'udp:') {
+          if(!tr[p.host])
+            tr[p.host] = [p.hostname, p.port];
+
+          var h = q.xt.match(/[^:]+$/g);
+          tr[p.host].push({ m: list[i], h: h});
+        }
+        //TODO: http
+      }
+    }
+
+    var n = Object.keys(tr).length;
+    if(!n) {
+      cb();
+      return;
+    }
+
+    for(var i in tr) {
+      TrackerUDP(tr[i], function() {
+        n--;
+        //TODO: update database
+        //      min-max between different torrent seeders
+        cb();
+      });
+    }
+  }
+
+}
+
+
+
+
 
 
 //------------------------------------------------------------------------------
@@ -81,14 +237,18 @@ server = http.createServer(function(rq, r) {
           skip: q.s || 0,
         })
         .toArray(function (err, list) {
-          if(err || !list.length)
+          if(err || !list.length) {
             r.end('[]');
-          else
+          }
+
+          stats.get(list, function () {
             r.end(JSON.stringify(list));
+          });
         });
 
       break;
 
+    //FIXME: unused
     case 'sources':
       if(!u.query) {
         r.end('[]');

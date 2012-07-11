@@ -95,12 +95,17 @@ body[search] .dainput input {
  *  item
  */
 .item {
+  padding-left: 3.2em;
   margin-bottom: 1em;
+}
+
+.item > div + div {
 }
 
 .item, .item .sources a {
   font-size: 10pt;
 }
+
 
 .item .sources a {
   margin-right: 1em;
@@ -111,6 +116,14 @@ body[search] .dainput input {
 .item .name {
   font-size: 12pt;
   color: black;
+}
+
+.item .stats {
+/*  background-color: rgb(240, 240, 240);*/
+  box-shadow: inset -5px 0px 15px -10px black;
+  margin-right: 1em;
+  width: 4em;
+  float: left;
 }
 
 /*

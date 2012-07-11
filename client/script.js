@@ -170,6 +170,8 @@ function search_ (u, iu) {
           .set('magnet', list[i].magnet)
           .set('name', list[i].name)
           .set('sources', r)
+          .set('seeders', (list[i].stats && list[i].stats.seeders) || 0)
+          .set('leechers',  (list[i].stats && list[i].stats.leechers) || 0)
       );
     }
 
