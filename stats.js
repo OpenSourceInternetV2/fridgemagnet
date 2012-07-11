@@ -2,6 +2,8 @@ var dgram = require('dgram');
 //var db = require('./common/db.js');
 //var cfg = require('./common/config.js').stats;
 
+transaction_id = parseInt(Math.random()*100000000);
+
 
 function Session (url, port, hash, cb) {
   this.u = url;
@@ -31,8 +33,8 @@ Session.prototype = {
 
   decode: function(m) {
     var d = {
-      action: m.readInt32LE(0),
-      transaction: m.readInt32LE(4),
+      action: m.readInt32BE(0),
+      transaction: m.readInt32BE(4),
     };
 
     if(d.transaction != this.tr) {
@@ -55,8 +57,8 @@ Session.prototype = {
 
         for(var i = 0; i < _; i+=4) {
           d.stats.push({
-            seeders:  m.readInt32LE(s),
-            leechers: m.readInt32LE(l)
+            seeders:  m.readInt32BE(s),
+            leechers: m.readInt32BE(l)
           });
 
           s+= 4;
@@ -66,7 +68,7 @@ Session.prototype = {
 
       case 3:
         d.error = m;
-        console.log('error :', m.toString());
+        console.log('! ', m.toString());
         this.s.close();
         return;
     }
@@ -75,10 +77,10 @@ Session.prototype = {
 
 
   action: function (a, d) {
-    this.tr = parseInt(Math.random()*100000000);
+    this.tr = ++transaction_id;
     var b = new Buffer(8);
-    b.writeInt32LE(a, 0);         //action
-    b.writeInt32LE(this.tr, 4);   //transaction id
+    b.writeInt32BE(a, 0);         //action
+    b.writeInt32BE(this.tr, 4);   //transaction id
 
     if(!d)
       b = Buffer.concat([this.id, b]);
@@ -122,8 +124,8 @@ Session.prototype = {
 
 
 
-var s = new Session( "tracker.publicbt.com", 80,
-  "c635de93045eb00d82aeaba77cb7df08a649a888");
+var s = new Session( "tracker.istole.it", 80,
+  "c635de93045eb00d82aeaba77cb7df08a649a888")
 
 
 
