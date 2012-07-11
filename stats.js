@@ -29,9 +29,17 @@ Session.prototype = {
   },
 
 
+  decode: function(m) {
+    return {
+      transaction: m.slice(4),
+      action: m.slice(4),
+      id: m.slice(8),
+    }
+  },
+
+
   check: function(m, r) {
     if(m.readInt32LE(0) == 3) {
-      m.slice(0, 8);
       console.log('error :', m.toString());
       this.s.close();
       return true;
@@ -76,7 +84,7 @@ Session.prototype = {
     if(this.check(m, r))
       return;
 
-    this.id = m.slice(8);
+    this.id = this.decode(m).id;
     console.log('Connection id: ', this.id);
 
     console.log(this.h);
@@ -88,7 +96,6 @@ Session.prototype = {
     if(this.check(m, r))
       return;
 
-    console.log(m);
     if(this.cb)
       this.cb(this);
   },
@@ -96,7 +103,7 @@ Session.prototype = {
 
 
 
-var s = new Session( "tracker.publicbt.com", 80,
+var s = new Session( "tracker.istole.it", 80,
   "c635de93045eb00d82aeaba77cb7df08a649a888");
 
 
