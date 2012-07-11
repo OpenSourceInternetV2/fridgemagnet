@@ -30,27 +30,50 @@ Session.prototype = {
 
 
   decode: function(m) {
-    return {
-      transaction: m.slice(4),
-      action: m.slice(4),
-      id: m.slice(8),
-    }
-  },
+    var d = {
+      action: m.readInt32LE(0),
+      transaction: m.readInt32LE(4),
+    };
 
-
-  check: function(m, r) {
-    if(m.readInt32LE(0) == 3) {
-      console.log('error :', m.toString());
-      this.s.close();
-      return true;
+    if(d.transaction != this.tr) {
+      if(d.action != 3) {
+        console.log('not same transaction id ' + d.transaction + ' but should be ' + this.tr);
+        this.s.close();
+      }
+      return;
     }
 
-    var tr = m.readInt32LE(4);
-    if(tr != this.tr) {
-      console.log('not same transaction id ' + tr + ' but should be ' + this.tr);
-      this.s.close();
-      return true;
+    switch(d.action) {
+      case 0:
+        d.id = m.slice(8);
+        break;
+
+      case 2:
+        //TODO: multihash
+        var _ = (m.length - 8) / 3;
+        var s = 8 + 0;
+        var l = 8 + 2 * _;
+
+        d.stats = [];
+
+        for(var i = 0; i < _; i+=4) {
+          d.stats.push({
+            seeders:  m.readInt32LE(s),
+            leechers: m.readInt32LE(l)
+          });
+
+          s+= 4;
+          l+= 4;
+        }
+        break;
+
+      case 3:
+        d.error = m;
+        console.log('error :', m.toString());
+        this.s.close();
+        return;
     }
+    return d;
   },
 
 
@@ -81,20 +104,19 @@ Session.prototype = {
 
 
   step1: function (m, r) {
-    if(this.check(m, r))
-      return;
+    var d = this.decode(m);
+    if(!d) return;
 
-    this.id = this.decode(m).id;
+    this.id = d.id;
     console.log('Connection id: ', this.id);
 
-    console.log(this.h);
     this.action(2, new Buffer(this.h));
   },
 
 
   step2: function (m, r) {
-    if(this.check(m, r))
-      return;
+    var d = this.decode(m);
+    if(!d) return;
 
     if(this.cb)
       this.cb(this);
@@ -103,7 +125,7 @@ Session.prototype = {
 
 
 
-var s = new Session( "tracker.istole.it", 80,
+var s = new Session( "tracker.publicbt.com", 80,
   "c635de93045eb00d82aeaba77cb7df08a649a888");
 
 
