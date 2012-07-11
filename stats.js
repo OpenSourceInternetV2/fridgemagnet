@@ -1,6 +1,6 @@
 var dgram = require('dgram');
-var db = require('./common/db.js');
-var cfg = require('./common/config.js').stats;
+//var db = require('./common/db.js');
+//var cfg = require('./common/config.js').stats;
 
 
 function Session (url, port, hash, cb) {
@@ -47,7 +47,6 @@ Session.prototype = {
         break;
 
       case 2:
-        //TODO: multihash
         var _ = (m.length - 8) / 3;
         var s = 8 + 0;
         var l = 8 + 2 * _;
