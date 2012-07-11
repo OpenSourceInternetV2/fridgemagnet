@@ -36,10 +36,8 @@ Session.prototype = {
     };
 
     if(d.transaction != this.tr) {
-      if(d.action != 3) {
-        console.log('not same transaction id ' + d.transaction + ' but should be ' + this.tr);
-        this.s.close();
-      }
+      console.log('not same transaction id ' + d.transaction + ' but should be ' + this.tr);
+      this.s.close();
       return;
     }
 
@@ -108,7 +106,7 @@ Session.prototype = {
     if(!d) return;
 
     this.id = d.id;
-    console.log('Connection id: ', this.id);
+    console.log('# ', this.id);
 
     this.action(2, new Buffer(this.h));
   },
