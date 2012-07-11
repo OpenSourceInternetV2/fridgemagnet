@@ -15,7 +15,7 @@ exports.crawler = {
   nRequests: 15,
   urlSize: 128,
   hostCount: 100,
-  hostScore: 1 / 100,
+  hostScore: 1 / 50,
 
   banish:
     /twitter|facebook|linkedin|google|youtube|deezer|dailymotion|vimeo|identi.ca|wikipedia|amazon|ebay|imdb|vimeo|itunes|apple|manual|reference|rediff|myspace|hotmail|digg|thumblr|flickr|bbc\.co|(\.gov$)|reddit|adverti(s|z)ing|soir\.be|nytime/i,

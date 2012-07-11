@@ -65,6 +65,10 @@ config.init = function () {
   }
 
   //config.watch('format.play',        'config-format.play',      'checked');
+  config.watch('save.history', 'cfg-history', 'checked', function (e) {
+    if(!e.target.checked)
+      historic.clear();
+  });
 }
 
 

@@ -29,6 +29,14 @@ input[type="text"] {
 input[type="text"]:not([value]) { color: grey; }
 input[type="text"]:focus { color: black; }
 
+a {
+  color: rgb(180, 180, 180);
+  cursor: pointer;
+}
+
+a:hover {
+  color: rgb(220, 220, 220);
+}
 
 /*
  * dainput
@@ -56,7 +64,7 @@ input[type="text"]:focus { color: black; }
 }
 
 
-.dainput[search] {
+body[search] .dainput {
   margin: 0em;
   width: 100%;
   height: 3.4em;
@@ -65,35 +73,23 @@ input[type="text"]:focus { color: black; }
   border-bottom: 1px rgb(140, 200, 200) solid;
 }
 
-.dainput[search] h1 {
+body[search] .dainput h1 {
   margin: 0.6em;
   font-size: 12pt;
   float:left;
 }
 
-.dainput[search] img {
+body[search] .dainput img {
   float:left;
   margin: 0em;
 }
 
-.dainput[search] input {
+body[search] .dainput input {
   margin: 0.6em;
   font-size: 11pt;
   width: 50%;
 }
 
-
-/*
- *  Content
- */
-#content {
-  margin-top: 4em;
-}
-
-#list {
-  font-size: 11pt;
-  padding-left: 3em;
-}
 
 /*
  *  item
@@ -104,7 +100,6 @@ input[type="text"]:focus { color: black; }
 
 .item, .item .sources a {
   font-size: 10pt;
-  color: rgb(180, 180, 180);
 }
 
 .item .sources a {
@@ -118,6 +113,47 @@ input[type="text"]:focus { color: black; }
   color: black;
 }
 
+/*
+ * Content
+ */
+#content {
+  margin-top: 2em;
+  width: 100%;
+}
+
+body:not([search]) #content {
+  display: none;
+}
+
+
+#list {
+  font-size: 11pt;
+  padding-left: 3em;
+  width: 75%;
+  margin-left: auto;
+}
+
+.left {
+  float: left;
+  padding-left: 1em;
+  width: 20%;
+}
+
+.left > div {
+  margin-bottom: 1em;
+  padding-bottom: 1em;
+  border-right: 1px rgb(140, 200, 200) solid;
+  border-bottom: 1px rgb(140, 200, 200) solid;
+
+  box-shadow: 5px 5px 15px -10px black;
+}
+
+.history-item {
+  font-size: 10pt;
+  margin-left: 1em;
+  margin-bottom: 0.5em;
+}
+
 
 /*
  * footer
@@ -126,7 +162,8 @@ input[type="text"]:focus { color: black; }
   width: 50%;
   margin: auto;
 
-  margin-top: 100px;
+  margin-top: 50px;
+  margin-bottom: 150px;
   padding: 1em;
   border-top: 1px rgb(140, 200, 200) solid;
 

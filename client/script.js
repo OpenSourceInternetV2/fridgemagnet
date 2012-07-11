@@ -21,8 +21,70 @@ function $(i) {
 }
 
 var ui = {
-  item: null
+  item: null,
+  historyItem: null,
 }
+
+
+
+//------------------------------------------------------------------------------
+var historic = {
+  init: function () {
+    var l = config('list.history');
+    if(!l)
+      return;
+
+    l = JSON.parse(l);
+    for(var i = 0; i < l.length; i++)
+      this.push_(l[i]);
+  },
+
+  clear: function () {
+    var c = $('history');
+    var l = c.childNodes;
+    while(l.length)
+      c.removeChild(l[0]);
+
+    config.remove('list.history');
+  },
+
+
+  push: function (q) {
+    var l = config('list.history');
+    if(!l)
+      config('list.history', JSON.stringify([q]));
+    else {
+      l = JSON.parse(l);
+
+      if(l.indexOf(q) != -1)
+        return;
+
+      if(l.length > 15)
+        l.splice(0,l.length-14);
+
+      l.push(q);
+      config('list.history', JSON.stringify(l));
+    }
+
+    this.push_(q);
+  },
+
+
+  push_: function (q) {
+    var e = ui.historyItem();
+    e.set('query', q);
+    e.addEventListener('click', function () {
+      search(q);
+    }, false);
+
+    var c = $('history');
+    if(!c.childNodes.length)
+      c.appendChild(e);
+    else
+      c.insertBefore(e, c.childNodes[0]);
+  },
+}
+
 
 
 //------------------------------------------------------------------------------
@@ -46,8 +108,20 @@ function xhrGet(url, onSuccess, onFail) {
   r.send();
 }
 
+
 function percentEncode(q) {
   return q; //.replace(/\W/g, '+');
+}
+
+function percentDecode(q) {
+  return q.replace(/%20/g, ' ').replace(/%21/g, '!').replace(/%23/g, '#')
+          .replace(/%24/g, '$').replace(/%26/g, '&').replace(/%27/g, "'")
+          .replace(/%28/g, '(').replace(/%29/g, ')').replace(/%2A/g, '*')
+          .replace(/%2B/g, '+').replace(/%2C/g, ',').replace(/%2F/g, '/')
+          .replace(/%3A/g, ':').replace(/%3B/g, ';').replace(/%3D/g, '=')
+          .replace(/%3F/g, '?').replace(/%40/g, '@').replace(/%5B/g, '[')
+          .replace(/%5D/g, ']');
+
 }
 
 
@@ -71,7 +145,7 @@ function search_ (u, iu) {
     if(iu != query.query)
       return;
 
-    $('dainput').setAttribute('search', '1');
+    document.body.setAttribute('search', '1');
 
     var list = JSON.parse(rq.responseText);
     if(!list.length) {
@@ -115,6 +189,8 @@ function search (s, r) {
     history.pushState(stateObj, s, '?' + query.query);
   }
 
+  historic.push(s);
+  $('search-input').value = s;
   $('list').innerHTML = '';
   search_(query.query);
 }
@@ -128,6 +204,7 @@ function next () {
 function init() {
   // items:
   ui.item = parasol($('list-item'));
+  ui.historyItem = parasol($('history-item'));
 
   // events:
   $('search-input').addEventListener('keyup', function (e) {
@@ -135,9 +212,27 @@ function init() {
       search(e.target.value);
   }, false);
 
+
+  $('filter-input').addEventListener('keyup', function (e) {
+    var s = e.target.value;
+    var l = $('list').childNodes;
+
+    if(s.length) {
+      s = RegExp(s, 'gi');
+      for(var i = 0; i < l.length; i++)
+        if(l[i].getAttribute('name').search(s) == -1)
+          l[i].style.display = 'none';
+        else
+          l[i].style.display = 'block';
+    }
+    else
+      for(var i = 0; i < l.length; i++)
+        l[i].style.display = 'block';
+  }, false);
+
   document.addEventListener('scroll', function (e) {
     if(!query.loading && !query.fail &&
-       window.scrollY + window.innerHeight > document.body.clientHeight - 80)
+       window.scrollY + window.innerHeight > document.body.clientHeight + 60)
       next();
 
   }, false);
@@ -158,6 +253,10 @@ function init() {
   });
 
   if(location.search && location.search.length > 1)
-    search(location.search.substr(1), true);
+    search(percentDecode(location.search.substr(3)), true);
+
+  // other init
+  config.init();
+  historic.init();
 }
 

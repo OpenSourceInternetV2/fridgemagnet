@@ -23,6 +23,19 @@
          </div>
 
          <div id="content">
+            <div style="text-align:right; padding-right: 1em">
+                <input id="filter-input" type="text" placeholder="filter">
+            </div>
+             <div class="left">
+                 <div>
+                     <input type="checkbox" id="cfg-history"> History
+                     <div id="history">
+                     </div>
+                 </div>
+                 <div id="pub">
+                     eyh tony!
+                 </div>
+             </div>
              <div id="list">
              </div>
          </div>
@@ -34,10 +47,14 @@
 
 
 
-        <div style="display:hidden">
-            <div id="list-item" class="item">
+        <div style="display:none">
+            <div id="list-item" class="item" inherits="name=name">
                 <a class="name" inherits="name,magnet=href"></a>
                 <div class="sources" inherits="sources"></div>
+            </div>
+
+            <div id="history-item" class="history-item">
+                <a inherits="query"></a>
             </div>
         </div>
     </body>
