@@ -21,11 +21,11 @@ var url = require('url');
 var qr = require('querystring');
 
 var db = require('./common/db.js');
-var cfg = require('./common/config.js').crawler;
+var _ = require('./common/config.js').main;
 
 
 var log = function () {};
-if(cfg.log)
+if(require('./common/config.js').main.log)
   log = function(v) { console.log(v.substr(0, 80)); }
 
 
@@ -49,35 +49,32 @@ Request.prototype = {
   set url (u) {
     this._u = u;
     if(!u) {
-      this.options = null;
+      this.o= null;
       return;
     }
 
-    this.options = url.parse(u);
-    if(!this.options.host)
-      throw "not a valid url";
+    var o = url.parse(u);
+    if(!o.host) throw "not a valid url";
+    if(!o.port) o.port = 80;
+
+    this.o = o;
 
     var rq = this;
-    var req = http.get({
-      host: this.options.host,
-      port: this.options.port || 80,
-      path: this.options.path
-    },
-    function (r) {
+    var req = http.get(o, function (r) {
       if(r.statusCode && r.statusCode != 200) {
         if(r.statusCode >= 400)
-          manager.done(rq);
+          manager.end(rq, true);
         else (r.statusCode >= 300)
           try {
-            manager.todo(rq, r.headers.location);
-            manager.done(rq);
+            manager.source(rq, r.headers.location);
+            manager.end(rq);
           }
           catch(e) {}
         return;
       }
 
       if(!r.headers['content-type'] || r.headers['content-type'].search(/html/i) == -1) {
-        manager.fail(rq);
+        manager.end(rq, true);
         req.end();
         return;
       }
@@ -89,14 +86,16 @@ Request.prototype = {
       .on('end', function () {
         if(rq.body.length)
           rq.analyze();
-        manager.done(rq);
+        manager.end(rq);
       })
       .on('error', function () {
       });
     })
     .on('error', function (e) {
-      manager.done(rq);
+      manager.end(rq);
     });
+
+    this.r = req;
   },
 
 
@@ -112,13 +111,13 @@ Request.prototype = {
     if(!list)
       return;
 
-    var host = 'http://' + this.options.host;
-    var path = this.options.path;
+    var host = 'http://' + this.o.host;
+    var path = this.o.path;
     path = path.substr(0,path.lastIndexOf('/'));
 
     for(var i = 0; i < list.length; i++) {
       var u = url.parse(list[i].substring(7));
-      if(u.protocol == 'magnet:' || u.length > cfg.urlSize)
+      if(u.protocol == 'magnet:' || u.length > _.urlSize)
         continue;
 
       //relative
@@ -134,7 +133,7 @@ Request.prototype = {
         u = u.href;
 
       if(u != this.url)
-        manager.todo(this, u);
+        manager.source(u);
     }
   },
 }
@@ -145,97 +144,134 @@ Request.prototype = {
 manager = {
   _n: 0,
   list: [],
+  hosts: {},
 
 
   next: function (t) {
-    if(this.list.length >= cfg.nRequests)
+    if(this.list.length >= _.maxRequests)
       return;
 
     var q = { date: null, scanning: null };
     if(t)
       q = {};
 
-    db.sources.find(q, { limit: cfg.nRequests - this.list.length })
+    var m = this;
+    db.sources.find(q, { limit: _.maxRequests - this.list.length })
       .sort({ date: 1 })
       .toArray(function (err, list) {
         if(err || !list.length) {
           log('no data');
-          manager.next(true);
+          m.next(true);
           return;
         }
 
-        list.forEach(function(d, i) {
-          var u = d.url;
-          if(manager.list.indexOf(u) != -1)
-            return;
-
-          if(manager.list.length < cfg.nRequests)
-            db.sources.update({ url: u }, {$set: { scanning: true }}, function () {
-              try {
-                manager.list.push(u);
-                new Request(u);
-              }
-              catch(e) {
-                manager.fail(d.url);
-              }
-            });
-        });
+        for(var i = 0; i < list.length && m.list.length < _.maxRequests; i++) {
+          m.request(list[i].url);
+        }
       });
   },
 
 
-  done: function (r) {
-    if(r.body && r.body.length)
-      log('< ' + r.url);
-
-    db.hosts.update({ url: r.options.host }, { $inc: { score: r.score, count: 1 }}, { upsert: true});
-
-    db.sources.update({ url: r.url },
-      { $set: { date: Date.now() }, $unset: { scanning: 1 }},
-      function () {
-        manager.list.splice(manager.list.indexOf(r.url), 1);
-        manager.next();
-      });
-  },
-
-
-  fail: function (r, e) {
-    db.sources.update({ url: r.url },
-      { $set: { fail: e || true, date: Date.now() }, $unset: { scanning: 1 }},
-      function () {
-        manager.list.splice(manager.list.indexOf(r.url), 1);
-        manager.next();
-      });
-  },
-
-
-  todo: function (r, u) {
-    var h = url.parse(u).host;
-    if(!h || h.search(cfg.banish) != -1)
+  /* Create a new request
+   *
+   */
+  request: function(u) {
+    if(this.list.length >= _.maxRequests ||
+       this.list.indexOf(u) != -1)
       return;
 
-    db.hosts.findOne({ url: h }, function (err, d) {
-      if(d && d.count >= cfg.hostCount &&
-         (d.score / d.count) < cfg.hostScore) {
-         db.sources.remove({ url: RegExp('^https?://' + h.replace(/\./, '\\.') + '/.*', 'gi') });
-         return;
+    var m = this;
+    db.sources.update({ url: u }, {$set: { scanning: true }}, function (e) {
+      if(e)
+        return;
+
+      var h;
+      try {
+        var e = new Request(u);
+        h = e.o.host;
       }
-      db.sources.insert({ url: u });
+      catch(e) {
+        db.sources.update({ url: u }, { $set: { date: Date.now() }, $unset: { scanning: 1 }});
+        return;
+      }
+
+      m.list.push(u);
+      if(m.hosts[h])
+        m.hosts[h].push(e);
+      else
+        m.hosts[h] = [ e ];
     });
   },
 
 
+  /*  Called when a request is done, clean everything
+   *  (request[, fail])
+   */
+  end: function(r, f) {
+    var o = {
+      $set: { date: Date.now() },
+      $unset: { scanning: 1 },
+    };
+
+    if(f)
+      o.$set.fail = true;
+    else
+      db.hosts.update({ url: r.o.host }, { $inc: { score: r.score, count: 1 }}, { upsert: true});
+
+    var m = this;
+    db.sources.update({ url: r.url }, o, function () {
+      log('< ' + r.url);
+      try {
+        var l = m.hosts[r.o.host];
+        if(l) {
+          l.splice(l.indexOf(r), 1);
+          if(!l.length)
+            delete m.list[r.o.host];
+        }
+      }
+      catch(e) {};
+
+      m.list.splice(m.list.indexOf(r.url), 1);
+      m.next();
+    });
+  },
+
+
+  /* Aborts all requests from a host
+   */
+  abort: function(h) {
+    var l = this.hosts[h];
+    if(!l)
+      return;
+
+    console.log('abort:', h);
+    for(var i = 0; i < l.length; i++)
+      try {
+        l[i].r.abort();
+      }
+      catch(e) {};
+
+    //this.list ?
+
+    delete this.hosts[h];
+  },
+
+
+  /* Add a source
+   */
+  source: function(u) {
+    db.source(u, function (e, h) {
+      if(!e)
+        return;
+      manager.abort(h);
+    });
+  },
+
+
+  /* Add a magnet
+   */
   magnet: function (r, u) {
-    var o = { $addToSet: { sources: r.url } };
-    var q = qr.parse(u);
-
-    if(q.dn)
-      o.$set = {
-        name: q.dn,
-        keywords: q.dn.toLowerCase().split(/\W+/)
-      };
-
-    db.magnets.update({ magnet: u }, o, { upsert: true });
+    db.magnet(u, r.url);
     log('# ' + u);
   },
 
@@ -252,7 +288,7 @@ function tn() {
 
 db.init(function () {
   //clean up if change in banish
-  //db.sources.remove({ url: cfg.banish });
+  //db.sources.remove({ url: _.banish });
 
   db.sources.update({ scanning: true }, { $unset: { scanning: 1 } }, { multi: true }, function () {
     if(process.argv.length > 2) {

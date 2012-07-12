@@ -16,7 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+var qr = require('querystring');
+var url = require('url');
+var mongo = require('mongodb');
+
 var cfg = require('./config.js').db;
+var _ = require('./config.js').main;
 
 /*
  *  magnet: {
@@ -40,12 +45,13 @@ var cfg = require('./config.js').db;
  *  }
  */
 
-var mongo = require('mongodb');
-var Server = mongo.Server;
-var DB = mongo.Db;
+var server = new mongo.Server(cfg.host, cfg.port, cfg.options);
+var db = new mongo.Db(cfg.db, server);
 
-var server = new Server(cfg.host, cfg.port, cfg.options);
-var db = new DB(cfg.db, server);
+var hosts;
+var magnets;
+var sources;
+
 
 exports.init = function (cb, cberr) {
   var d = this;
@@ -62,7 +68,7 @@ exports.init = function (cb, cberr) {
         return;
       }
 
-      d.magnets = coll;
+      magnets = coll;
       coll.ensureIndex({ 'magnet': 1 }, { unique: true, dropDups: true }, function () {});
       coll.ensureIndex({ 'keywords': 1 }, function () {});
       coll.ensureIndex({ 'sources': 1 }, function () {});
@@ -73,7 +79,7 @@ exports.init = function (cb, cberr) {
           return;
         }
 
-        d.hosts = coll;
+        hosts = coll;
         coll.ensureIndex({ 'url' : 1 }, { unique: true, dropDups: true }, function() {});
 
         db.collection('sources', function (err, coll) {
@@ -82,17 +88,56 @@ exports.init = function (cb, cberr) {
             return;
           }
 
-          d.sources = coll;
+          sources = coll;
           coll.ensureIndex({ 'url' : 1 }, { unique: true, dropDups: true }, function() {});
           coll.ensureIndex({ 'date' : 1 }, function () {});
           coll.ensureIndex({ 'scanning' : 1 }, function () {});
 
+          d.hosts = hosts;
+          d.magnets = magnets;
+          d.sources = sources;
           cb();
         });
       });
     });
   });
 }
+
+
+/*
+ *  Append the magnet m, from source s
+ */
+exports.magnet = function (m, s) {
+  var o = { $addToSet: { sources: s } };
+  var q = qr.parse(m);
+
+  if(q.dn)
+    o.$set = {
+      name: q.dn,
+      keywords: q.dn.toLowerCase().split(/\W+/)
+    }
+  magnets.update({ magnet: m }, o, { upsert: true });
+}
+
+/*
+ *  Add a source to db, and call cb(err)
+ */
+exports.source = function (u, cb) {
+  var h = url.parse(u).host;
+  if(!h || h.search(_.banish) != -1)
+    return;
+
+  hosts.findOne({ url: h }, function (err, d) {
+    if(d && d.count >= _.quotaCount && (d.score / d.count) < _.quotaR ) {
+      sources.remove({ url: RegExp('^https?://' + h.replace(/\./, '\\.') + '/.*', 'gi') });
+      cb(true, h);
+      return;
+    }
+    sources.insert({ url: u });
+    cb(false);
+  });
+}
+
 
 exports.db = db;
 
