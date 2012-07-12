@@ -159,7 +159,8 @@ var stats = {
           if(!tr[p.host])
             tr[p.host] = [p.hostname, p.port];
 
-          var h = q.xt.match(/[^:]+$/g);
+          var h = q.xt.lastIndexOf(':');
+          h = (h == -1) ? q.xt : q.xt.substr(h+1);
           tr[p.host].push({ m: list[i], h: h});
         }
         //TODO: http
@@ -192,7 +193,29 @@ var stats = {
 
 
 
+//------------------------------------------------------------------------------
+var serverStats;
 
+function updateStats() {
+  db.magnets.count({}, function (err, m) {
+    if(err) m = 0;
+
+    db.sources.count({ date: { $exists: 1}}, function (err, s) {
+      if(err) s = 0;
+
+      db.sources.count({}, function (err, t) {
+        if(err) t = 0;
+
+        serverStats = {
+          m: m,
+          s: s,
+          t: t
+        }
+      });
+    });
+  });
+  setTimeout(updateStats, 600000);
+}
 
 //------------------------------------------------------------------------------
 server = http.createServer(function(rq, r) {
@@ -205,23 +228,7 @@ server = http.createServer(function(rq, r) {
 
   switch(l[1]) {
     case 'stats':
-      db.magnets.count({}, function (err, m) {
-        if(err)
-          m = 0;
-
-        db.sources.count({ date: { $exists: 1}}, function (err, s) {
-          if(err)
-            s = 0;
-
-          db.sources.count({}, function (err, t) {
-            if(err)
-              t = 0;
-
-            r.end('{"m":' + m + ',"s":' + s + ',"t":' + t + '}');
-          });
-        });
-      });
-
+      r.end(JSON.stringify(serverStats));
       break;
 
     case 'search':
@@ -272,6 +279,7 @@ server = http.createServer(function(rq, r) {
 
 //------------------------------------------------------------------------------
 db.init(function () {
+  updateStats();
   server.listen(cfg.port, cfg.host);
 },
 function (n, e) {

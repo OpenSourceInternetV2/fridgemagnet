@@ -26,7 +26,7 @@ var cfg = require('./common/config.js').crawler;
 
 var log = function () {};
 if(cfg.log)
-  log = function(v) { console.log(v); }
+  log = function(v) { console.log(v.substr(0, 80)); }
 
 
 const links = /\shref=\"[^"]+/gi;
@@ -36,6 +36,7 @@ const magnets = /magnet:[^\s"\]]+/gi;
 //------------------------------------------------------------------------------
 function Request (u) {
   this.url = u;
+  this.score = 0;
 }
 
 Request.prototype = {
@@ -155,7 +156,7 @@ manager = {
       q = {};
 
     db.sources.find(q, { limit: cfg.nRequests - this.list.length })
-      .sort({ date: -1 })
+      .sort({ date: 1 })
       .toArray(function (err, list) {
         if(err || !list.length) {
           log('no data');
@@ -187,14 +188,14 @@ manager = {
     if(r.body && r.body.length)
       log('< ' + r.url);
 
+    db.hosts.update({ url: r.options.host }, { $inc: { score: r.score, count: 1 }}, { upsert: true});
+
     db.sources.update({ url: r.url },
       { $set: { date: Date.now() }, $unset: { scanning: 1 }},
       function () {
         manager.list.splice(manager.list.indexOf(r.url), 1);
         manager.next();
       });
-    db.hosts.insert({ url: r.options.host, count: 0, score: 0 });
-    db.hosts.update({ url: r.options.host }, { $inc: { score: r.score, count: 1 }});
   },
 
 
@@ -216,27 +217,25 @@ manager = {
     db.hosts.findOne({ url: h }, function (err, d) {
       if(d && d.count >= cfg.hostCount &&
          (d.score / d.count) < cfg.hostScore) {
-         //db.sources.remove({ url: RegExp('/^https?:\/\/' + url.replace(/\./, '\\.'), 'gi') });
+         db.sources.remove({ url: RegExp('^https?://' + h.replace(/\./, '\\.') + '/.*', 'gi') });
          return;
-       }
+      }
       db.sources.insert({ url: u });
-      db.sources.update({ url: u }, { $addToSet: { sources: r.url }});
     });
   },
 
 
   magnet: function (r, u) {
-    var o = { magnet: u };
+    var o = { $addToSet: { sources: r.url } };
     var q = qr.parse(u);
 
-    if(q.dn) {
-      o.name = q.dn;
-      o.keywords = q.dn.toLowerCase().split(/\W+/);
-    }
+    if(q.dn)
+      o.$set = {
+        name: q.dn,
+        keywords: q.dn.toLowerCase().split(/\W+/)
+      };
 
-    db.magnets.insert(o, function () {
-      db.magnets.update({ magnet: u }, { $addToSet: { sources: r.url }});
-    });
+    db.magnets.update({ magnet: u }, o, { upsert: true });
     log('# ' + u);
   },
 

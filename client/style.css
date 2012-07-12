@@ -225,6 +225,9 @@ body:not([search]) #content {
   padding-left: 1em;
 }
 
+body:not([search]) .left > div {
+  border: 1px rgb(140, 200, 200) solid;
+}
 
 .left:hover,
 body[search] .left {
