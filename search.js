@@ -89,15 +89,9 @@ function TrackerUDP (magnets, cb) {
         break;
 
       case 2:
-        var _ = (m.length - 8) / 3;
-        var s = 8 + 0;
-        var l = 8 + 2 * _;
-
-        for(var i = 0; i < magnets.length; i++) {
-          stats.update(magnets[i].m, m.readInt32BE(s), m.readInt32BE(l));
-          s+= 4;
-          l+= 4;
-        }
+        var s = 8;
+        for(var i = 0, k=8; i < magnets.length; i++, k+=12)
+          stats.update(magnets[i].m, m.readInt32BE(k), m.readInt32BE(k+8));
 
         success = true;
         sock.close();

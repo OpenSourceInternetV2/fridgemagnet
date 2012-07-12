@@ -227,6 +227,9 @@ function next () {
 
 
 function init() {
+  window.scroll(0, 0);
+
+
   // items:
   ui.item = parasol($('list-item'));
   ui.historyItem = parasol($('history-item'));
