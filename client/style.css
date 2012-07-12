@@ -38,6 +38,30 @@ a:hover {
   color: rgb(220, 220, 220);
 }
 
+
+/*
+ * popup
+ */
+.popup {
+  display: none;
+}
+
+.popup:target {
+  display: block;
+  position: fixed;
+  top: 5%;
+  left: 5%;
+  height 90%;
+  width: 90%;
+  padding: 1em;
+
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px rgb(140, 200, 200) solid;
+
+  box-shadow: 5px 5px 15px -10px black;
+}
+
+
 /*
  * dainput
  */
@@ -121,6 +145,7 @@ body[search] .dainput input {
 /*  background-color: rgb(240, 240, 240);*/
   box-shadow: inset -5px 0px 15px -10px black;
   margin-right: 1em;
+  padding: 0.2em;
   width: 4em;
   float: left;
 }

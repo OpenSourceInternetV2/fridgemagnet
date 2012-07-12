@@ -260,9 +260,14 @@ function init() {
     if(!query.loading && !query.fail &&
        window.scrollY + window.innerHeight > document.body.clientHeight + 60)
       next();
-
   }, false);
 
+
+  document.body.addEventListener('click', function (e) {
+    if(!e.target.onclick && e.target.tagName != 'A' &&
+       e.target.tagName != 'INPUT')
+      location.hash = '';
+  }, false);
 
   // search and stats
   xhrGet(cfg.server + 'stats', function (rq) {

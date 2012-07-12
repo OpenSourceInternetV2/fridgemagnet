@@ -78,7 +78,6 @@ config.watch = function (key, id, prop, cb) {
 
   o.addEventListener('change', function (evt) {
     config(key, evt.currentTarget[prop]);
-
     if(cb)
       cb(evt);
   }, false);
@@ -87,7 +86,7 @@ config.watch = function (key, id, prop, cb) {
 
   var e = config(key);
   if(e)
-    o[prop] = e;
+    o[prop] = (prop == 'checked') ? (e == 'true') : e;
 }
 
 
