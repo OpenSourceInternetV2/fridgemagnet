@@ -23,30 +23,10 @@ var mongo = require('mongodb');
 var cfg = require('./config.js').db;
 var _ = require('./config.js').main;
 
-/*
- *  magnet: {
- *    _id:
- *    magnet:
- *    name:
- *    date:
- *    rate: [ somme , #votes ]
- *    comments:
- *  }
- *
- *  hosts: {
- *    url:
- *    count:
- *    score:
- *  }
- *
- *  source: {
- *    url:
- *    date:
- *  }
- */
 
 var server = new mongo.Server(cfg.host, cfg.port, cfg.options);
 var db = new mongo.Db(cfg.db, server);
+
 
 var hosts;
 var magnets;
