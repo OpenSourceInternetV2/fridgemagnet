@@ -25,15 +25,52 @@ var ui = {
   historyItem: null,
 
 
+  bodyClick: function (e) {
+    if(!e.target.onclick && e.target.tagName != 'A' &&
+       e.target.tagName != 'INPUT')
+      location.hash = '';
+  },
+
+
+  filterKey: function (e) {
+    var s = e.target.value;
+    var l = $('list').childNodes;
+
+    if(s.length) {
+      s = RegExp(s, 'gi');
+      for(var i = 0; i < l.length; i++)
+        if(l[i].getAttribute('name').search(s) == -1)
+          l[i].style.display = 'none';
+        else
+          l[i].style.display = 'block';
+    }
+    else
+      for(var i = 0; i < l.length; i++)
+        l[i].style.display = 'block';
+  },
+
+
   noteClick: function (e, n) {
     if(e.parentNode.hasAttribute('noted'))
       return;
 
     e.parentNode.setAttribute('noted', '1');
-    note(e.parentNode.getAttribute('magnet'), n);
+    server.note(e.parentNode.getAttribute('magnet'), n);
+  },
+
+
+  searchKey: function (e) {
+    if(e.keyCode == 13)
+      server.search(e.target.value);
+  },
+
+
+  scroll: function (e) {
+    if(!query.loading && !query.fail &&
+       window.scrollY + window.innerHeight > document.body.clientHeight + 60)
+      server.next();
   },
 }
-
 
 
 //------------------------------------------------------------------------------
@@ -86,7 +123,7 @@ var historic = {
     var e = ui.historyItem();
     e.set('query', q);
     e.addEventListener('click', function () {
-      search(q);
+      server.search(q);
     }, false);
 
     var c = $('history');
@@ -97,6 +134,8 @@ var historic = {
   },
 }
 
+
+//------------------------------------------------------------------------------
 
 
 //------------------------------------------------------------------------------
@@ -122,7 +161,13 @@ function xhrGet(url, onSuccess, onFail) {
 
 
 function percentEncode(q) {
-  return q; //.replace(/\W/g, '+');
+  return q.replace(' ', '%20').replace('!', '%21').replace('#', '%23')
+          .replace('$', '%24').replace('&', '%26').replace("'", '%27')
+          .replace('(', '%28').replace(')', '%29').replace('*', '%2A')
+          .replace('+', '%2B').replace(',', '%2C').replace('/', '%2F')
+          .replace(':', '%3A').replace(';', '%3B').replace('=', '%3D')
+          .replace('?', '%3F').replace('@', '%40').replace('[', '%5B')
+          .replace(']', '%5D');
 }
 
 function percentDecode(q) {
@@ -145,132 +190,102 @@ var query = {
 };
 
 
-function search_ (u, iu) {
-  query.loading = true;
-  query.fail = false;
+var server = {
+  search_: function (u, iu) {
+    query.loading = true;
+    query.fail = false;
 
-  if(!iu)
-    iu = u;
+    if(!iu)
+      iu = u;
 
-  //FIXME: eventual conflict → verify current query before
-  xhrGet(cfg.server + 'search/?' + u, function (rq) {
-    if(iu != query.query)
-      return;
+    //FIXME: eventual conflict → verify current query before
+    xhrGet(cfg.server + 'search/?' + u, function (rq) {
+      if(iu != query.query)
+        return;
 
-    document.body.setAttribute('search', '1');
+      document.body.setAttribute('search', '1');
 
-    var list = JSON.parse(rq.responseText);
-    if(!list.length) {
-      if(query.count)
-        query.fail = true;
-      else
-        $('list').innerHTML = '0 results :(';
+      var list = JSON.parse(rq.responseText);
+      if(!list.length) {
+        if(query.count)
+          query.fail = true;
+        else
+          $('list').innerHTML = '0 results :(';
+        query.loading = false;
+        return;
+      }
+
+      var fr = document.createDocumentFragment();
+      for(var i = 0; i < list.length; i++) {
+        var s = list[i].sources;
+        var r = '';
+        for(var j = 0; j < s.length; j++)
+          r += '<a href="' + s[j] + '">' + s[j] + '</a>';
+
+        var stats = list[i].stats;
+        var n = 0;
+        if(stats && stats.count)
+          n = parseInt(stats.note / stats.count * 5)
+
+        var e = ui.item()
+            .set('magnet', list[i].magnet)
+            .set('name', list[i].name)
+            .set('sources', r)
+            .set('seeders', (stats && stats.seeders) || 0)
+            .set('leechers',  (stats && stats.leechers) || 0)
+            .set('note', n);
+
+        fr.appendChild(e);
+      }
+
+      $('list').appendChild(fr);
+      query.count = $('list').childNodes.length;
       query.loading = false;
-      return;
+    });
+  },
+
+
+  search: function (s, r) {
+    query.search = s;
+    query.query = 'q=' + percentEncode(s);
+
+    if(!r) {
+      var stateObj = {};
+      history.pushState(stateObj, s, '?' + query.query);
     }
 
-    var fr = document.createDocumentFragment();
-    for(var i = 0; i < list.length; i++) {
-      var s = list[i].sources;
-      var r = '';
-      for(var j = 0; j < s.length; j++)
-        r += '<a href="' + s[j] + '">' + s[j] + '</a>';
-
-      var stats = list[i].stats;
-      var n = 0;
-      if(stats && stats.count)
-        n = parseInt(stats.note / stats.count * 5)
-
-      var e = ui.item()
-          .set('magnet', list[i].magnet)
-          .set('name', list[i].name)
-          .set('sources', r)
-          .set('seeders', (stats && stats.seeders) || 0)
-          .set('leechers',  (stats && stats.leechers) || 0)
-          .set('note', n);
-
-      fr.appendChild(e);
-    }
-
-    $('list').appendChild(fr);
-    query.count = $('list').childNodes.length;
-    query.loading = false;
-  });
-}
+    historic.push(s);
+    $('search-input').value = s;
+    $('list').innerHTML = '';
+    this.search_(query.query);
+  },
 
 
-function search (s, r) {
-  query.search = s;
-  query.query = 'q=' + percentEncode(s);
+  note: function (m, n) {
+    xhrGet(cfg.server + 'note/' + (n ? 1 : -1) + '/?' + m,
+      function (){});
+  },
 
-  if(!r) {
-    var stateObj = {};
-    history.pushState(stateObj, s, '?' + query.query);
+
+  next: function () {
+    this.search_(query.query + '&s=' + query.count, query.query);
   }
-
-  historic.push(s);
-  $('search-input').value = s;
-  $('list').innerHTML = '';
-  search_(query.query);
-}
-
-
-function note (m, n) {
-  xhrGet(cfg.server + 'note/' + (n ? 1 : -1) + '/?' + m,
-    function (){});
-}
-
-
-function next () {
-  search_(query.query + '&s=' + query.count, query.query);
 }
 
 
 function init() {
   window.scroll(0, 0);
 
-
   // items:
   ui.item = parasol($('list-item'));
   ui.historyItem = parasol($('history-item'));
 
-
   // events:
-  $('search-input').addEventListener('keyup', function (e) {
-    if(e.keyCode == 13)
-      search(e.target.value);
-  }, false);
+  $('search-input').addEventListener('keyup', ui.searchKey, false);
+  $('filter-input').addEventListener('keyup', ui.filterKey, false);
 
-
-  $('filter-input').addEventListener('keyup', function (e) {
-    var s = e.target.value;
-    var l = $('list').childNodes;
-
-    if(s.length) {
-      s = RegExp(s, 'gi');
-      for(var i = 0; i < l.length; i++)
-        if(l[i].getAttribute('name').search(s) == -1)
-          l[i].style.display = 'none';
-        else
-          l[i].style.display = 'block';
-    }
-    else
-      for(var i = 0; i < l.length; i++)
-        l[i].style.display = 'block';
-  }, false);
-
-  document.addEventListener('scroll', function (e) {
-    if(!query.loading && !query.fail &&
-       window.scrollY + window.innerHeight > document.body.clientHeight + 60)
-      next();
-  }, false);
-
-
-  document.body.addEventListener('click', function (e) {
-    if(!e.target.onclick && e.target.tagName != 'A' &&
-       e.target.tagName != 'INPUT')
-      location.hash = '';
-  }, false);
+  document.addEventListener('scroll', ui.scroll, false);
+  document.body.addEventListener('click', ui.bodyClick, false);
 
   // search and stats
   xhrGet(cfg.server + 'stats', function (rq) {
@@ -279,7 +294,7 @@ function init() {
   });
 
   if(location.search && location.search.length > 1)
-    search(percentDecode(location.search.substr(3)), true);
+    server.search(percentDecode(location.search.substr(3)), true);
 
   // other init
   config.init({ 'save.history': 'true' }, {
