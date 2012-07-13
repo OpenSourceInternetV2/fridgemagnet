@@ -281,9 +281,11 @@ function init() {
   if(location.search && location.search.length > 1)
     search(percentDecode(location.search.substr(3)), true);
 
-
   // other init
-  config.init();
+  config.init({ 'save.history': 'true' }, {
+    'save.history': { id: 'cfg-history', prop: 'checked', cb:
+      function (e) { if(e.target.checked) historic.clear(); } }
+  });
   historic.init();
 }
 

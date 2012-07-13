@@ -52,23 +52,28 @@ config.remove = function (key) {
   localStorage.removeItem(key);
 }
 
-config.init = function () {
+config.init = function (defaults, watchers) {
   var defaultTab;
   /*  TODO
    *  default.loadby
    *  plugins.*.enabled
    */
-  if(!localStorage.length) {
-  }
-  else {
-  }
+  if(!localStorage.length)
+    for(var i in defaults)
+      config(i, defaults[i]);
 
-  config.watch('save.history', 'cfg-history', 'checked', function (e) {
+  if(watchers)
+    for(var i in watchers) {
+      var e = watchers[i];
+      config.watch(i, e.id, e.prop, e.cb);
+    }
+
+/*  config.watch('save.history', 'cfg-history', 'checked', function (e) {
     if(!e.target.checked) {
       historic.clear();
       //config.remove('save.history');
     }
-  });
+  });*/
 }
 
 
