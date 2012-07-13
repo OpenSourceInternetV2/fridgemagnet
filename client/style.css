@@ -39,16 +39,26 @@ a:hover {
 }
 
 
+
+.bg {
+  position:absolute;
+  opacity: 0.25;
+  left: 0px;
+  top: 20%;
+  z-index: -1;
+}
+
 /*
  * popup
  */
 .popup {
   display: none;
-  position: fixed;
+  position: absolute;
   top: 5%;
   left: 5%;
-  height 90%;
   width: 90%;
+  min-height: 50%;
+
   padding: 1em;
 
   background-color: rgba(255, 255, 255, 0.95);
@@ -92,6 +102,11 @@ a:hover {
 .dainput h1 a {
   text-decoration: none;
   color: black;
+}
+
+.dainput h1 small {
+  vertical-align:top;
+  font-style: italic;
 }
 
 
@@ -218,11 +233,9 @@ body:not([search]) #content {
  */
 .left {
   position: absolute;
-  left: -14em;
+  left: -13em;
   top: 4em;
   width: 14em;
-  background-color: rgba(255, 255, 255, 0.8);
-  padding-left: 1em;
 }
 
 body:not([search]) .left > div {
@@ -234,21 +247,37 @@ body[search] .left {
   left: 0em;
 }
 
+
+.left h1 {
+  vertical-align: middle;
+  font-size: 11pt;
+  font-weight: normal;
+  margin-top: 0.5em;
+  margin-bottom: 1em;
+  margin-left: -1em;
+}
+
 .left > div {
   margin-bottom: 1em;
+  margin-left: 1em;
+  padding-left: 2em;
   padding-bottom: 1em;
   border-right: 1px rgb(140, 200, 200) solid;
   border-bottom: 1px rgb(140, 200, 200) solid;
 
+  background-color: rgba(255, 255, 255, 0.8);
+
   box-shadow: 5px 5px 15px -10px black;
+}
+
+.left h1 input {
+  margin-left: -1em;
 }
 
 .history-item {
   font-size: 10pt;
-  margin-left: 1em;
   margin-bottom: 0.5em;
 }
-
 
 /*
  * footer

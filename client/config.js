@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 var cfg = {
-  server: 'http://localhost:8080/',
+  server: 'http://lordblackfox.net:8080/',
   title: 'Da fridge',
 }
 

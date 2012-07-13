@@ -7,7 +7,7 @@ exports.main = {
   maxRequests: 200,      //maximum crawler's parallel requests
 
   // quota
-  quotaCount: 100,      //minimum of scanned before compare quota
+  quotaCount: 70,      //minimum of scanned before compare quota
   quotaR: 0.02,         //minmal quotient (score / number) to be relevant
   urlSize: 128,         //maximal size of an url
 
@@ -29,6 +29,7 @@ exports.db = {
 
 
 exports.search = {
+  mongo21: true,
   maxResults: 100,
 
   // comment it if non cross domain → Access-Control-Allow-Origin header's value
