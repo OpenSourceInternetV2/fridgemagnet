@@ -218,6 +218,36 @@ function updateStats() {
 }
 
 //------------------------------------------------------------------------------
+/*var query = function (q, c) {
+  var l = q.q.split(/(\W|\+)+/gi);
+  db.magnets.find({
+    keywords: { $in: l },
+  }, {
+    keywords: 0,
+    _id: 0,
+  }, {
+    limit: 50,
+    skip: q.s || 0,
+  })
+  .toArray(c);
+}*/
+/*if(cfg.mongo21)
+  query = function (q, c) {
+    db.magnets.aggregate([
+      { $match: { keywords: {  $in: q.q.split(/(\W|\+)+/gi) }}},
+      { $unwind: '$keywords' },
+      { $group: { keywords: { keywords: 1},
+                  magnet: '$magnet',
+                  sources: '$sources',
+                  stats: '$stats',
+                  match_: { $sum: 1 }}},
+      { $sort: { match_: -1 }}
+    ], function (err, l) {
+      console.log(err);
+    });
+  }*/
+
+
 server = http.createServer(function(rq, r) {
   //TODO: session number limits
   if(cfg.CORS)
@@ -254,6 +284,7 @@ server = http.createServer(function(rq, r) {
         .toArray(function (err, list) {
           if(err || !list.length) {
             r.end('[]');
+            return;
           }
 
           stats.get(list, function () {
