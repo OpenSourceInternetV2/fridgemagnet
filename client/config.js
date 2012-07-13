@@ -67,13 +67,6 @@ config.init = function (defaults, watchers) {
       var e = watchers[i];
       config.watch(i, e.id, e.prop, e.cb);
     }
-
-/*  config.watch('save.history', 'cfg-history', 'checked', function (e) {
-    if(!e.target.checked) {
-      historic.clear();
-      //config.remove('save.history');
-    }
-  });*/
 }
 
 
