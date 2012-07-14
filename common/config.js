@@ -4,7 +4,7 @@ exports.main = {
 
   // maximums
   maxQueries: 100,        //maximum of queries
-  maxRequests: 200,      //maximum crawler's parallel requests
+  maxRequests: 100,      //maximum crawler's parallel requests
 
   // quota
   quotaCount: 70,      //minimum of scanned before compare quota
@@ -31,9 +31,6 @@ exports.db = {
 exports.search = {
   mongo21: true,
   maxResults: 100,
-
-  //timeout on trackers connections
-  trTimeout: 1000,
 
   // comment it if non cross domain → Access-Control-Allow-Origin header's value
   CORS: '*',

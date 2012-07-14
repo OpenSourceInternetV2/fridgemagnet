@@ -51,7 +51,6 @@ exports.init = function (cb, cberr) {
       magnets = coll;
       coll.ensureIndex({ 'magnet': 1 }, { unique: true, dropDups: true }, function () {});
       coll.ensureIndex({ 'keywords': 1 }, function () {});
-      coll.ensureIndex({ 'sources': 1 }, function () {});
 
       db.collection('hosts', function (err, coll) {
         if(err) {
@@ -70,7 +69,6 @@ exports.init = function (cb, cberr) {
 
           sources = coll;
           coll.ensureIndex({ 'url' : 1 }, { unique: true, dropDups: true }, function() {});
-          coll.ensureIndex({ 'date' : 1 }, function () {});
           coll.ensureIndex({ 'scanning' : 1 }, function () {});
 
           d.hosts = hosts;
@@ -87,35 +85,68 @@ exports.init = function (cb, cberr) {
 /*
  *  Append the magnet m, from source s
  */
-exports.magnet = function (m, s) {
+exports.addMagnets = function (s, l) {
   var o = { $addToSet: { sources: s } };
-  var q = qr.parse(m);
 
-  if(q.dn)
-    o.$set = {
+  for(var i = 0; i < l.length; i++) {
+    var m = l[i];
+    var q = qr.parse(m);
+
+    //FIXME for the moment:
+    if(!q.dn)
+      continue;
+
+    l[i] = {
+      magnet: m,
       name: q.dn,
-      keywords: q.dn.toLowerCase().split(/\W+/)
-    }
-  magnets.update({ magnet: m }, o, { upsert: true });
+      keywords: q.dn.toLowerCase().match(/(\w)+/gi)
+    };
+  }
+  magnets.insert(l);
 }
+
 
 /*
  *  Add a source to db, and call cb(err)
  */
-exports.source = function (u, cb) {
-  var h = url.parse(u).host;
-  if(!h || h.search(_.banish) != -1)
-    return;
+exports.addSources = function (l, cb) {
+  var hs = {};
 
-  hosts.findOne({ url: h }, function (err, d) {
-    if(d && d.count >= _.quotaCount && (d.score / d.count) < _.quotaR ) {
-      sources.remove({ url: RegExp('^https?://' + h.replace(/\./, '\\.') + '/.*', 'gi') });
-      cb(true, h);
-      return;
-    }
-    sources.insert({ url: u });
-    cb(false);
-  });
+  for(var i = 0; i < l.length; i++) {
+    var h = url.parse(l[i]).hostname;
+    if(!h || h.search(_.banish) != -1)
+      continue;
+
+    if(hs[h])
+      hs[h].push({ url: l[i] });
+    else
+      hs[h] = [{ url: l[i] }];
+  }
+
+  hosts.find({ url: { $in: Object.keys(hs) }})
+    .toArray(function (err, list) {
+      if(!err)
+        for(var i = 0; i < list.length; i++) {
+          var host = list[i];
+          if(host.count < _.quotaCount || (host.score / host.count) >= _.quotaR)
+            continue;
+
+          sources.remove({
+            url: RegExp('^https?://' + host.url.replace(/\./, '\\.') + '/.*', 'gi')
+          });
+
+          delete hs[host.url];
+        }
+
+      list = [];
+      for(var i in hs)
+        list = list.concat(hs[i]);
+
+      do {
+        sources.insert(list.splice(0, 50));
+      } while(list.length);
+      cb();
+    });
 }
 
 
