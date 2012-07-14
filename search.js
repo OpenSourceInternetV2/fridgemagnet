@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /* API (using get methode)
- *  /search/?q=
- *
+ *  /search/?q=[QUERY]&s=[LIMIT]              make search
+ *  /stats                                    get server's stats
  *
  */
 
@@ -33,6 +33,8 @@ var cfg = require('./common/config.js').search;
 //------------------------------------------------------------------------------
 transaction_id = parseInt(Math.random()*100000000);
 
+blackTrackers = [ 'udp://tracker.openbittorrent.com:80' ];
+
 
 function TrackerUDP (magnets, cb) {
   var host = magnets[0];
@@ -42,6 +44,8 @@ function TrackerUDP (magnets, cb) {
   magnets.splice(0,2);
 
   var conn_id, trans_id;
+  var success = false;
+  var stack;
 
   function action(a, d) {
     trans_id = ++transaction_id;
@@ -54,16 +58,47 @@ function TrackerUDP (magnets, cb) {
     else
       b = Buffer.concat([conn_id, b, d]);
 
-    //console.log('> ', b.length, ' ', b);
     sock.send(b, 0, b.length, port, host,
-    function(e, b) {
-      if(e)
-        console.log('error: ' + e);
-    });
+      function(e, b) {
+        if(e)
+          console.log('error: ' + e);
+      });
   }
 
-  var success = false;
+
+  function scrap () {
+    stack = magnets.splice(0, 70);
+    var h = '';
+    for(var i = 0; i < stack.length; i++)
+      h += stack[i].h;
+
+    action(2, new Buffer(h, 'hex'));
+  }
+
+
+  function onScrap(m) {
+    for(var i = 0, k = 8; i < stack.length; i++, k+=12)
+      db.magnets.update({ magnet: stack[i].m.magnet }, { $set: {
+          'stats.seeders':  m.readInt32BE(k),
+          'stats.leechers': m.readInt32BE(k+8)
+          }
+      });
+
+
+    if(magnets.length) {
+      scrap();
+      return;
+    }
+
+    success = true;
+    sock.close();
+  }
+
+
+  var tm = true;
+
   sock.on('message', function(m) {
+    tm = false;
     var d = {
       action: m.readInt32BE(0),
       transaction: m.readInt32BE(4),
@@ -78,23 +113,11 @@ function TrackerUDP (magnets, cb) {
     switch(d.action) {
       case 0:
         conn_id = m.slice(8);
-        //scrapp :)
-        //console.log('# ', conn_id);
-        var h = '';
-
-        for(var i = 0; i < magnets.length; i++)
-          h += magnets[i].h;
-
-        action(2, new Buffer(h, 'hex'));
+        scrap();
         break;
 
       case 2:
-        var s = 8;
-        for(var i = 0, k=8; i < magnets.length; i++, k+=12)
-          stats.update(magnets[i].m, m.readInt32BE(k), m.readInt32BE(k+8));
-
-        success = true;
-        sock.close();
+        onScrap(m);
         break;
 
       case 3:
@@ -103,7 +126,7 @@ function TrackerUDP (magnets, cb) {
     }
   })
   .on('close', function () {
-    cb(success, magnets);
+    cb(success);
   })
   .on('error', function () {
     cb(false);
@@ -111,86 +134,116 @@ function TrackerUDP (magnets, cb) {
 
   conn_id = new Buffer([0x00, 0x00, 0x04, 0x17, 0x27, 0x10, 0x19, 0x80]);
   action(0);
+
+  setTimeout(function () {
+    if(tm)
+      sock.close();
+  }, cfg.trTimeout || 20000);
 }
 
 
 
-var stats = {
-  update: function(m, s, l) {
-    m.stats.seeders = Math.max(s, m.stats.seeders);
-    m.stats.leechers = Math.max(l, m.stats.leechers);
-  },
-
-  get: function (list, cb) {
-    var ts = parseInt(Date.now()/1000);
-    var min = ts - 2100;
-    var tr = {};
-    var updated = [];
-
-    for(var i = 0; i < list.length; i++) {
-      var item = list[i];
-      if(item.stats && item.stats.date >= min)
-        continue;
-
-      updated.push(item);
-
-      if(item.stats) {
-        item.stats.date = ts;
-        item.stats.seeders = 0;
-        item.stats.leechers = 0;
-      }
-      else
-        item.stats = {
-          date: ts,
-          seeders: 0,
-          leechers: 0,
-        }
-
-      var q = item.magnet.substr(8);
-      q = qr.parse(q);
-
-      if(!q.tr)
-        continue;
-
-      for(var j = 0; j < q.tr.length; j++) {
-        var p = url.parse(q.tr[j])
-
-        if(p.protocol == 'udp:') {
-          if(!tr[p.host])
-            tr[p.host] = [p.hostname, p.port];
-
-          var h = q.xt.lastIndexOf(':');
-          h = (h == -1) ? q.xt : q.xt.substr(h+1);
-          tr[p.host].push({ m: list[i], h: h});
-        }
-        //TODO: http
-      }
-    }
-
-    var n = Object.keys(tr).length;
-    if(!n) {
-      cb();
-      return;
-    }
-
-    for(var i in tr)
-      TrackerUDP(tr[i], function(magnets, m) {
-        /*console.log(n);
-        n--;
-        if(n)
-          return;*/
-
-        cb();
-
-        for(var i = 0; i < updated.length; i++)
-          db.magnets.update({ magnet: updated[i].magnet }, { $set: { stats: updated[i].stats } });
-      });
-
-  }
-
+/*  Search without checking for stats (used by search())
+ */
+function search_(r, q, s) {
+  db.magnets.find({
+      keywords: { $all: q },
+  }, {
+    _id: 0,
+    keywords: 0,
+  }, {
+    limit: 50,
+    skip: s
+  })
+  .sort({ 'stats.seeders': -1 })
+  .toArray(function(err, list) {
+    if(err || !list.length)
+      r.end('[]');
+    r.end(JSON.stringify(list));
+  });
 }
 
 
+/* Search
+ */
+function search(r, q, s) {
+  var ts = parseInt(Date.now()/1000);
+  q = q.match(/(\w)+/gi);
+
+  db.magnets.find({
+      keywords: { $all: q },
+      $or: [
+        { stats: { $exists: 0 } },
+        { date: { $lt: ts } },
+      ]
+    }, {
+      magnet: 1,
+    }, {
+      limit: 1000,
+    })
+    .toArray(function (err, list) {
+      if(err || !list.length) {
+        search_(r, q, s);
+        return;
+      }
+
+      var tr = {};
+      for(var i = 0; i < list.length; i++)
+        try {
+          var item = list[i];
+          if(item.stats) {
+            item.stats.date = ts;
+            item.stats.seeders = 0;
+            item.stats.leechers = 0;
+          }
+          else
+            item.stats = {
+              date: ts,
+              seeders: 0,
+              leechers: 0
+            }
+
+          var m = qr.parse(item.magnet.substr(8));
+          if(!m.tr)
+            continue;
+
+          //for the moment, only to one tracker
+          //and only for udp:/
+          var p, j = 0;
+
+          for(var j = 0; j <= m.tr.length; j++) {
+            if(blackTrackers.indexOf(m.tr[j]) != -1)
+              continue;
+
+            p = url.parse(m.tr[j]);
+            if(p.protocol != 'udp:')
+              continue;
+
+            if(!tr[p.host])
+              tr[p.host] = [p.hostname, p.port];
+
+            var h = m.xt.lastIndexOf(':');
+            h = (h != -1) ? m.xt.substr(h+1) : m.xt;
+            tr[p.host].push({ m: item, h: h});
+          }
+        }
+        catch(e) {}
+
+      //we never know...
+      var n = Object.keys(tr).length;
+      if(!n) {
+        search_(r, q, s);
+        return;
+      }
+
+      for(var i in tr)
+        TrackerUDP(tr[i], function() {
+            n--;
+            if(!n)
+              search_(r, q, s);
+        });
+    });
+}
 
 
 //------------------------------------------------------------------------------
@@ -218,36 +271,6 @@ function updateStats() {
 }
 
 //------------------------------------------------------------------------------
-/*var query = function (q, c) {
-  var l = q.q.split(/(\W|\+)+/gi);
-  db.magnets.find({
-    keywords: { $in: l },
-  }, {
-    keywords: 0,
-    _id: 0,
-  }, {
-    limit: 50,
-    skip: q.s || 0,
-  })
-  .toArray(c);
-}*/
-/*if(cfg.mongo21)
-  query = function (q, c) {
-    db.magnets.aggregate([
-      { $match: { keywords: {  $in: q.q.split(/(\W|\+)+/gi) }}},
-      { $unwind: '$keywords' },
-      { $group: { keywords: { keywords: 1},
-                  magnet: '$magnet',
-                  sources: '$sources',
-                  stats: '$stats',
-                  match_: { $sum: 1 }}},
-      { $sort: { match_: -1 }}
-    ], function (err, l) {
-      console.log(err);
-    });
-  }*/
-
-
 server = http.createServer(function(rq, r) {
   //TODO: session number limits
   if(cfg.CORS)
@@ -271,26 +294,7 @@ server = http.createServer(function(rq, r) {
 
       //TODO: http://stackoverflow.com/questions/9822910/mongo-custom-multikey-sorting
       //      (when 2.1 is out)
-      q.q = q.q.replace(/\W+$/gi, '');
-      db.magnets.find({
-          keywords: { $in: q.q.split(/(\W|\+)+/gi) },
-        }, {
-          keywords: 0,
-          _id: 0,
-        }, {
-          limit: 50,
-          skip: q.s || 0,
-        })
-        .toArray(function (err, list) {
-          if(err || !list.length) {
-            r.end('[]');
-            return;
-          }
-
-          stats.get(list, function () {
-            r.end(JSON.stringify(list));
-          });
-        });
+      search(r, q.q, q.s || 0);
       break;
 
     case 'note':

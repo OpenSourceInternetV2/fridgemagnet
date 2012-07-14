@@ -32,6 +32,9 @@ exports.search = {
   mongo21: true,
   maxResults: 100,
 
+  //timeout on trackers connections
+  trTimeout: 1000,
+
   // comment it if non cross domain → Access-Control-Allow-Origin header's value
   CORS: '*',
 
