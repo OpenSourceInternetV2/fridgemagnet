@@ -69,7 +69,7 @@ exports.init = function (cb, cberr) {
 
           sources = coll;
           coll.ensureIndex({ 'url' : 1 }, { unique: true, dropDups: true }, function() {});
-          coll.ensureIndex({ 'scanning' : 1 }, function () {});
+          coll.ensureIndex({ 'date' : 1 }, function () {});
 
           d.hosts = hosts;
           d.magnets = magnets;

@@ -104,11 +104,13 @@ Request.prototype = {
       manager.magnets(this, l);
     }
 
+    this.body.replace(/https/, 'http');
     l = this.body.match(links);
     if(!l) {
       this.destroy();
       return;
     }
+
 
     var h = 'http://' + this.o.hostname;
     var p = this.o.path;
