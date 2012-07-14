@@ -57,16 +57,16 @@ a:hover {
   top: 5%;
   left: 5%;
   width: 90%;
-  min-height: 50%;
+  font-size:10pt;
+}
 
+.popup > div {
   padding: 1em;
 
   background-color: rgba(255, 255, 255, 0.95);
   border: 1px rgb(140, 200, 200) solid;
 
   box-shadow: 5px 5px 15px -10px black;
-
-  font-size:10pt;
 }
 
 .popup:target {
@@ -78,6 +78,9 @@ a:hover {
   font-size: 11pt;
 }
 
+.popup a[href="#"] {
+  font-weight: bold;
+}
 
 /*
  * dainput

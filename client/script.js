@@ -37,13 +37,6 @@ var ui = {
        .set('noteT', 0);
   },
 
-  // Events:
-  bodyClick: function (e) {
-    if(!e.target.onclick && e.target.tagName != 'A' &&
-       e.target.tagName != 'INPUT')
-      location.hash = '';
-  },
-
 
   filterKey: function (e) {
     var s = e.target.value;
@@ -365,7 +358,6 @@ function init() {
   //$('torrent-input').addEventListener('change', ui.torrentInput, false);
 
   document.addEventListener('scroll', ui.scroll, false);
-  document.body.addEventListener('click', ui.bodyClick, false);
 
   // search and stats
   xhrGet(cfg.server + 'stats', function (rq) {
