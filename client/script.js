@@ -25,6 +25,19 @@ var ui = {
   historyItem: null,
 
 
+  // Methods:
+  note: function (e, n) {
+    if(n && n.note && n.count)
+      e.set('note', parseInt(n.note / n.count * 5))
+       .set('noteN', n.note)
+       .set('noteT', n.count);
+    else
+      e.set('note', 0)
+       .set('noteN', 0)
+       .set('noteT', 0);
+  },
+
+  // Events:
   bodyClick: function (e) {
     if(!e.target.onclick && e.target.tagName != 'A' &&
        e.target.tagName != 'INPUT')
@@ -51,11 +64,22 @@ var ui = {
 
 
   noteClick: function (e, n) {
+    // this function is called by the HTML, e is the currentTarget
     if(e.parentNode.hasAttribute('noted'))
       return;
 
     e.parentNode.setAttribute('noted', '1');
     server.note(e.parentNode.getAttribute('magnet'), n);
+
+    var s = {
+      count: parseInt(e.parentNode.getAttribute('noteT')) + 1,
+      note: parseInt(e.parentNode.getAttribute('noteN'))
+    };
+
+    if(n)
+      s.note++;
+
+    ui.note(e.parentNode.parentNode.parentNode, s);
   },
 
 
@@ -69,6 +93,14 @@ var ui = {
     if(!query.loading && !query.fail &&
        window.scrollY + window.innerHeight > document.body.clientHeight + 60)
       server.next();
+  },
+
+
+  torrentInput: function (e) {
+    var l = e.currentTarget.files;
+
+    for(var i = 0; i < l.length; i++)
+      torrentFile.magnetize(l[i]);
   },
 }
 
@@ -136,6 +168,56 @@ var historic = {
 
 
 //------------------------------------------------------------------------------
+var torrentFile = {
+  bdecode: function (d) {
+    var o;
+
+  },
+
+  magnetize: function (f) {
+    var r = FileReader();
+    r.readAsBinaryString(f);
+    var d = r.result;
+
+    var i = 0;
+    function _s() {
+      var j = d.indexOf(':', i);
+      if(j==-1 || d[i] == '0' && j != i+1)
+        throw "invalid string";
+
+      var s = parseInt(d.substring(i,j));
+      i = j+s+1;
+      s = d.substring(j+1, i);
+      i++;
+      return s;
+    }
+
+    function _i() {
+      var j = d.indexOf('e', i);
+      if(j == -1)
+        throw "invalid integer";
+      j = parseInt(d.substring(i,j));
+      i = j+1;
+      return j;
+    }
+
+    function _d() {
+      var l = [];
+      while(d[i] != 'e' && i <= d.length) {
+
+      }
+    }
+
+    for(; i < d.length; i++) {
+      var c = d[i];
+      switch(c) {
+        case 'd':
+          ;
+      }
+    }
+  },
+
+}
 
 
 //------------------------------------------------------------------------------
@@ -223,17 +305,14 @@ var server = {
           r += '<a href="' + s[j] + '">' + s[j] + '</a>';
 
         var stats = list[i].stats;
-        var n = 0;
-        if(stats && stats.count)
-          n = parseInt(stats.note / stats.count * 5)
-
         var e = ui.item()
             .set('magnet', list[i].magnet)
             .set('name', list[i].name)
             .set('sources', r)
             .set('seeders', (stats && stats.seeders) || 0)
             .set('leechers',  (stats && stats.leechers) || 0)
-            .set('note', n);
+
+        ui.note(e, stats);
 
         fr.appendChild(e);
       }
@@ -283,6 +362,7 @@ function init() {
   // events:
   $('search-input').addEventListener('keyup', ui.searchKey, false);
   $('filter-input').addEventListener('keyup', ui.filterKey, false);
+  //$('torrent-input').addEventListener('change', ui.torrentInput, false);
 
   document.addEventListener('scroll', ui.scroll, false);
   document.body.addEventListener('click', ui.bodyClick, false);
