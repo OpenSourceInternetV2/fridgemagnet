@@ -67,7 +67,7 @@ function TrackerUDP (magnets, cb) {
 
 
   function scrap () {
-    stack = magnets.splice(0, 70);
+    stack = magnets.splice(0, 50);
     var h = '';
     for(var i = 0; i < stack.length; i++)
       h += stack[i].h;
@@ -138,7 +138,7 @@ function TrackerUDP (magnets, cb) {
   setTimeout(function () {
     if(tm)
       sock.close();
-  }, cfg.trTimeout || 20000);
+  }, cfg.trTimeout || 10000);
 }
 
 
@@ -179,7 +179,7 @@ function search(r, q, s) {
     }, {
       magnet: 1,
     }, {
-      limit: 1000,
+      limit: 500,
     })
     .toArray(function (err, list) {
       if(err || !list.length) {

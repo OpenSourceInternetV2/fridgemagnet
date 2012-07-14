@@ -38,24 +38,6 @@ var ui = {
   },
 
 
-  filterKey: function (e) {
-    var s = e.target.value;
-    var l = $('list').childNodes;
-
-    if(s.length) {
-      s = RegExp(s, 'gi');
-      for(var i = 0; i < l.length; i++)
-        if(l[i].getAttribute('name').search(s) == -1)
-          l[i].style.display = 'none';
-        else
-          l[i].style.display = 'block';
-    }
-    else
-      for(var i = 0; i < l.length; i++)
-        l[i].style.display = 'block';
-  },
-
-
   noteClick: function (e, n) {
     // this function is called by the HTML, e is the currentTarget
     if(e.parentNode.hasAttribute('noted'))
@@ -354,7 +336,6 @@ function init() {
 
   // events:
   $('search-input').addEventListener('keyup', ui.searchKey, false);
-  $('filter-input').addEventListener('keyup', ui.filterKey, false);
   //$('torrent-input').addEventListener('change', ui.torrentInput, false);
 
   document.addEventListener('scroll', ui.scroll, false);
