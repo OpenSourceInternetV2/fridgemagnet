@@ -49,7 +49,7 @@ function Request (u, cb) {
       else (r.statusCode >= 300)
         try {
           manager.sources.push(r.headers.location);
-          console.log('% ' + u + ' → ' + r.headers.location);
+          log('% ' + u + ' → ' + r.headers.location);
           that.destroy(r.headers.location);
         }
         catch(e) {}
@@ -205,7 +205,7 @@ manager = {
 
 
   magnets: function (source, l) {
-    console.log('# ', l.join('\n# '));
+    log('# ' + l.length + ' ' + l.join('\n# '));
     db.addMagnets(source, l);
   },
 }

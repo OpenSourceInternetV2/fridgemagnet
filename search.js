@@ -170,6 +170,12 @@ function search(r, q, s) {
   var ts = parseInt(Date.now()/1000);
   q = q.match(/(\w)+/gi);
 
+  if(s+50 > cfg.maxResults) {
+    r.end('[]');
+    return;
+  }
+
+
   db.magnets.find({
       keywords: { $all: q },
       $or: [
@@ -179,7 +185,7 @@ function search(r, q, s) {
     }, {
       magnet: 1,
     }, {
-      limit: 500,
+      limit: cfg.maxResults,
     })
     .toArray(function (err, list) {
       if(err || !list.length) {

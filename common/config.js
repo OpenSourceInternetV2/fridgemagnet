@@ -13,7 +13,7 @@ exports.main = {
 
 
   banish:
-    /twitter|facebook|linkedin|google|youtube|deezer|dailymotion|vimeo|identi.ca|wikipedia|amazon|ebay|imdb|vimeo|itunes|apple|manual|reference|rediff|myspace|hotmail|digg|thumblr|flickr|bbc\.co|(\.gov$)|reddit|adverti(s|z)ing|soir\.be|nytime/i,
+    /127.0.0.1|localhost|lefrigo|twitter|facebook|linkedin|google|youtube|deezer|dailymotion|vimeo|identi.ca|wikipedia|amazon|ebay|imdb|vimeo|itunes|apple|manual|reference|rediff|myspace|hotmail|digg|thumblr|flickr|bbc\.co|(\.gov$)|reddit|adverti(s|z)ing|soir\.be|nytime/i,
 }
 
 
@@ -30,7 +30,7 @@ exports.db = {
 
 exports.search = {
   mongo21: true,
-  maxResults: 100,
+  maxResults: 150,
 
   trTimeout: 1000,
 

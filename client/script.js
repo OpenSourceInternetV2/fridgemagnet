@@ -276,8 +276,10 @@ var server = {
       for(var i = 0; i < list.length; i++) {
         var s = list[i].sources;
         var r = '';
-        for(var j = 0; j < s.length; j++)
-          r += '<a href="' + s[j] + '">' + s[j] + '</a>';
+
+        if(s)
+          for(var j = 0; j < s.length; j++)
+            r += '<a href="' + s[j] + '">' + s[j] + '</a>';
 
         var stats = list[i].stats;
         var e = ui.item()
