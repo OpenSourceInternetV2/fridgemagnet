@@ -49,7 +49,7 @@ exports.init = function (cb, cberr) {
       }
 
       magnets = coll;
-      coll.ensureIndex({ 'magnet': 1 }, { unique: true, dropDups: true }, function () {});
+      coll.ensureIndex({ 'infohash': 1 }, { unique: true, dropDups: true }, function () {});
       coll.ensureIndex({ 'keywords': 1 }, function () {});
 
       db.collection('hosts', function (err, coll) {
@@ -86,23 +86,29 @@ exports.init = function (cb, cberr) {
  *  Append the magnet m, from source s
  */
 exports.addMagnets = function (s, l) {
-  var o = { $addToSet: { sources: s } };
+  var o = [];
 
-  for(var i = 0; i < l.length; i++) {
-    var m = l[i];
-    var q = qr.parse(m);
+  console.log(s);
+  /* for(var i = 0; i < l.length; i++) {*/
+  l.forEach(function(e, i) {
+    var q = qr.parse(e.substring(8));
 
     //FIXME for the moment:
     if(!q.dn)
-      continue;
+      return;
 
+    o.push(q.xt);
     l[i] = {
-      magnet: m,
+      infohash: q.xt,
+      magnet: e,
       name: q.dn,
-      keywords: q.dn.toLowerCase().match(/(\w)+/gi)
+      keywords: q.dn.toLowerCase().match(/(\w)+/gi),
     };
-  }
+  });
+
   magnets.insert(l);
+  //console.log(l);
+  magnets.update({ infohash: { $in: o } }, { $addToSet: { sources: s }});
 }
 
 

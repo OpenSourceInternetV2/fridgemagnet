@@ -72,7 +72,12 @@ function TrackerUDP (magnets, cb) {
     for(var i = 0; i < stack.length; i++)
       h += stack[i].h;
 
-    action(2, new Buffer(h, 'hex'));
+    try {
+      action(2, new Buffer(h, 'hex'));
+    }
+    catch(e) {
+      sock.close();
+    }
   }
 
 

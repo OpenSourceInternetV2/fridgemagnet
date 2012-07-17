@@ -19,9 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 var http = require('http');
 var url = require('url');
 var qr = require('querystring');
+var path = require('path');
 
 var db = require('./common/db.js');
 var _ = require('./common/config.js').main;
+var torrent = require('./common/torrent.js');
 
 
 var log = function () {};
@@ -41,6 +43,12 @@ function Request (u, cb) {
   this.o = url.parse(u);
   this.c = cb;
 
+
+  var ext = path.extname(u);
+
+  if(ext == '.torrent')
+    this.analyze = this.analyze_;
+
   var that = this;
   var rq = http.get(this.o, function (r) {
     if(r.statusCode && r.statusCode != 200) {
@@ -56,19 +64,25 @@ function Request (u, cb) {
       return;
     }
 
-    if(!r.headers['content-type'] || r.headers['content-type'].search(/html/i) == -1) {
+
+    if(r.headers['content-type'] == 'application/x-bittorrent') {
+      that.analyze = that.analyze_;
+    }
+    else if(ext != '.torrent' && (!r.headers['content-type'] || r.headers['content-type'].search(/html/i) == -1)) {
       rq.end();
       that.destroy(true);
       return;
     }
 
-    that.body = '';
+    that.body = [];
     r.on('data', function (d) {
-      that.body += d.toString();
+      that.body.push(d);
     })
     .on('end', function () {
-      if(that.body.length)
+      if(that.body.length) {
+        that.body = Buffer.concat(that.body);
         that.analyze();
+      }
       else
         that.destroy();
     })
@@ -92,12 +106,14 @@ Request.prototype = {
     log('< ' + this.u);
     try {
       db.sources.update({ url: this.u }, o);
-      this.c(this, fail);
+      if(this.c)
+        this.c(this, fail);
     }catch(e) { console.log(e); }
   },
 
 
   analyze: function () {
+    this.body = this.body.toString();
     var l = this.body.match(magnets);
     if(l) {
       this.score = l.length;
@@ -140,6 +156,30 @@ Request.prototype = {
     var that = this;
     manager.sources = manager.sources.concat(s);
     this.destroy();
+  },
+
+
+  analyze_: function () {
+    try {
+      var o = {
+        $addToSet: { sources: this.u }
+      }
+      o.$set = torrent.decode(this.body);
+
+      if(!o.$set || !o.$set.name) {
+        this.destroy(true);
+        return;
+      }
+
+      o.$set.keywords = o.$set.name.toLowerCase().match(/(\w)+/gi);
+
+      db.magnets.update({ infohash: o.infoHash }, o, { upsert: true});
+      this.destroy();
+    }
+    catch(e) {
+      console.log(e);
+      this.destroy(true);
+    }
   },
 }
 
@@ -206,7 +246,7 @@ manager = {
 
   magnets: function (source, l) {
     log('# ' + l.length + ' ' + l.join('\n# '));
-    db.addMagnets(source, l);
+    db.addMagnets(source.u, l);
   },
 }
 

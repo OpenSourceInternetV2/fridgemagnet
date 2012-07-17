@@ -144,6 +144,7 @@ body[search] .dainput input {
  */
 .item {
   margin-bottom: 1em;
+  min-height: 3.5em;
 }
 
 .item > div + div {
@@ -175,7 +176,8 @@ body[search] .dainput input {
 }
 
 
-.item .note {
+.item .note,
+.item .size {
   float: left;
   margin-top: 0.2em;
   margin-right: 1em;

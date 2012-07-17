@@ -239,6 +239,15 @@ function percentDecode(q) {
 }
 
 
+function humanSize (s) {
+  if(s > 1000000000)
+    return (parseInt(s/100000000)/10) + 'Gb';
+  if(s > 1000000)
+    return (parseInt(s/100000)/10) + 'Mb';
+  if(s > 1000)
+    return (parseInt(s/100)/10) + 'Kb';
+  return s + ' bytes';
+}
 
 //------------------------------------------------------------------------------
 var query = {
@@ -288,6 +297,9 @@ var server = {
             .set('sources', r)
             .set('seeders', (stats && stats.seeders) || 0)
             .set('leechers',  (stats && stats.leechers) || 0)
+
+        if(list[i].size)
+          e.set('size', humanSize(list[i].size));
 
         ui.note(e, stats);
 
