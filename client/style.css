@@ -139,10 +139,21 @@ body[search] .dainput input {
   width: 50%;
 }
 
+
+
+
+#n-results {
+  margin-right: 0.6em;
+  float: right;
+  font-size: 11pt;
+  color: rgb(140, 200, 200);
+}
+
 /*
  *  item
  */
 .item {
+  padding-left: 5.5em;
   margin-bottom: 1em;
   min-height: 3.5em;
 }
@@ -167,9 +178,8 @@ body[search] .dainput input {
 }
 
 .item .stats {
-/*  background-color: rgb(240, 240, 240);*/
   box-shadow: inset -5px 0px 15px -10px black;
-  margin-right: 1em;
+  margin-left: -5.5em;
   padding: 0.2em;
   width: 4em;
   float: left;
@@ -178,8 +188,6 @@ body[search] .dainput input {
 
 .item .note,
 .item .size {
-  float: left;
-  margin-top: 0.2em;
   margin-right: 1em;
   color: grey;
   font-size: 12pt;
@@ -229,7 +237,7 @@ body:not([search]) #content {
 
 #list {
   font-size: 11pt;
-  margin-left: 18em;
+  margin-left: 17em;
 }
 
 

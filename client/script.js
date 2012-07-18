@@ -65,9 +65,9 @@ var ui = {
 
 
   scroll: function (e) {
-    if(!query.loading && !query.fail &&
+/*    if(!query.loading && !query.fail &&
        window.scrollY + window.innerHeight > document.body.clientHeight + 60)
-      server.next();
+      server.next();*/
   },
 
 
@@ -142,58 +142,6 @@ var historic = {
 }
 
 
-//------------------------------------------------------------------------------
-var torrentFile = {
-  bdecode: function (d) {
-    var o;
-
-  },
-
-  magnetize: function (f) {
-    var r = FileReader();
-    r.readAsBinaryString(f);
-    var d = r.result;
-
-    var i = 0;
-    function _s() {
-      var j = d.indexOf(':', i);
-      if(j==-1 || d[i] == '0' && j != i+1)
-        throw "invalid string";
-
-      var s = parseInt(d.substring(i,j));
-      i = j+s+1;
-      s = d.substring(j+1, i);
-      i++;
-      return s;
-    }
-
-    function _i() {
-      var j = d.indexOf('e', i);
-      if(j == -1)
-        throw "invalid integer";
-      j = parseInt(d.substring(i,j));
-      i = j+1;
-      return j;
-    }
-
-    function _d() {
-      var l = [];
-      while(d[i] != 'e' && i <= d.length) {
-
-      }
-    }
-
-    for(; i < d.length; i++) {
-      var c = d[i];
-      switch(c) {
-        case 'd':
-          ;
-      }
-    }
-  },
-
-}
-
 
 //------------------------------------------------------------------------------
 function xhrGet(url, onSuccess, onFail) {
@@ -260,6 +208,7 @@ var server = {
   search_: function (u, iu) {
     query.loading = true;
     query.fail = false;
+    query.count = 0;
 
     if(!iu)
       iu = u;
@@ -276,10 +225,14 @@ var server = {
         if(query.count)
           query.fail = true;
         else
-          $('list').innerHTML = '0 results :(';
+          $('list').innerHTML = 'No result <big style="color:red;"><big>&#9785;</big></big>';
         query.loading = false;
         return;
       }
+
+      list.sort(function (a, b) {
+        return a.stats.seeders < b.stats.seeders;
+      });
 
       var fr = document.createDocumentFragment();
       for(var i = 0; i < list.length; i++) {
@@ -308,6 +261,8 @@ var server = {
 
       $('list').appendChild(fr);
       query.count = $('list').childNodes.length;
+      $('n-results').innerHTML = query.count;
+
       query.loading = false;
     });
   },
@@ -325,6 +280,7 @@ var server = {
     historic.push(s);
     $('search-input').value = s;
     $('list').innerHTML = '';
+    $('n-results').innerHTML = '';
     this.search_(query.query);
   },
 

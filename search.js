@@ -82,12 +82,18 @@ function TrackerUDP (magnets, cb) {
 
 
   function onScrap(m) {
-    for(var i = 0, k = 8; i < stack.length; i++, k+=12)
+    for(var i = 0, k = 8; i < stack.length; i++, k+=12) {
+      var stats = stack[i].m.stats;
+      stats.seeders = m.readInt32BE(k);
+      stats.leechers = m.readInt32BE(k+8);
+
       db.magnets.update({ magnet: stack[i].m.magnet }, { $set: {
-          'stats.seeders':  m.readInt32BE(k),
-          'stats.leechers': m.readInt32BE(k+8)
+          'stats.date': stats.date,
+          'stats.seeders': stats.seeders,
+          'stats.leechers': stats.leechers
           }
       });
+    }
 
 
     if(magnets.length) {
@@ -148,53 +154,31 @@ function TrackerUDP (magnets, cb) {
 
 
 
-/*  Search without checking for stats (used by search())
- */
-function search_(r, q, s) {
-  db.magnets.find({
-      keywords: { $all: q },
-  }, {
-    _id: 0,
-    keywords: 0,
-  }, {
-    limit: 50,
-    skip: s
-  })
-  .sort({ 'stats.seeders': -1 })
-  .toArray(function(err, list) {
-    if(err || !list.length)
-      r.end('[]');
-    r.end(JSON.stringify(list));
-  });
-}
-
-
 /* Search
  */
 function search(r, q, s) {
+  var mt = parseInt(Date.now()/1000) - 2100;
   var ts = parseInt(Date.now()/1000);
   q = q.match(/(\w)+/gi);
 
-  if(s+50 > cfg.maxResults) {
+  /*if(s+50 > cfg.maxResults) {
     r.end('[]');
     return;
-  }
-
+  }*/
 
   db.magnets.find({
-      keywords: { $all: q },
-      $or: [
-        { stats: { $exists: 0 } },
-        { date: { $lt: ts } },
-      ]
+      keywords: { $all: q }
     }, {
-      magnet: 1,
+      _id: 0,
+      keywords: 0,
     }, {
       limit: cfg.maxResults,
+//      skip: s,
     })
+    .sort({ 'stats.seeders': -1 })
     .toArray(function (err, list) {
       if(err || !list.length) {
-        search_(r, q, s);
+        r.end('[]');
         return;
       }
 
@@ -203,6 +187,9 @@ function search(r, q, s) {
         try {
           var item = list[i];
           if(item.stats) {
+            if(item.stats.date && item.stats.date >= mt)
+              continue;
+
             item.stats.date = ts;
             item.stats.seeders = 0;
             item.stats.leechers = 0;
@@ -243,7 +230,7 @@ function search(r, q, s) {
       //we never know...
       var n = Object.keys(tr).length;
       if(!n) {
-        search_(r, q, s);
+        r.end(JSON.stringify(list));
         return;
       }
 
@@ -251,7 +238,7 @@ function search(r, q, s) {
         TrackerUDP(tr[i], function() {
             n--;
             if(!n)
-              search_(r, q, s);
+              r.end(JSON.stringify(list));
         });
     });
 }
@@ -303,9 +290,7 @@ server = http.createServer(function(rq, r) {
         return;
       }
 
-      //TODO: http://stackoverflow.com/questions/9822910/mongo-custom-multikey-sorting
-      //      (when 2.1 is out)
-      search(r, q.q, q.s || 0);
+      search(r, q.q/*, (q.s && parseInt(q.s)) || 0*/);
       break;
 
     case 'note':

@@ -4,7 +4,7 @@ exports.main = {
 
   // maximums
   maxQueries: 100,        //maximum of queries
-  maxRequests: 100,      //maximum crawler's parallel requests
+  maxRequests: 150,      //maximum crawler's parallel requests
 
   // quota
   quotaCount: 70,      //minimum of scanned before compare quota

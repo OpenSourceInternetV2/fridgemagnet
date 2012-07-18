@@ -40,6 +40,7 @@
          </div>
 
          <div id="content">
+            <span id="n-results"></span>
             <div id="list">
             </div>
          </div>
@@ -90,10 +91,10 @@
                     <span inherits="leechers" title="leechers"></span>
                 </div>
                 <div>
-                    <div>
-                        <a class="name" inherits="name,magnet=href"></a>
-                    </div>
-                    <div class="note"
+                    <a class="name" inherits="name,magnet=href"></a>
+                </div>
+                <div>
+                    <span class="note"
                         inherits="magnet=magnet,note=note,noted=noted,noteT=noteT,noteN=noteN">
                           <a onclick="ui.noteClick(this, false)">&#9785;</a>
                           <a onclick="ui.noteClick(this, true)">&#9786;</a>
@@ -107,9 +108,9 @@
                           <span>&#9734;</span>
                           <span>&#9734;</span>
                           <span>&#9734;</span>
-                    </div>
-                    <div class="size" inherits="size"></div>
-                    <div class="sources" inherits="sources"></div>
+                    </span>
+                    <span class="size" inherits="size"></span>
+                    <span class="sources" inherits="sources"></span>
                 </div>
             </div>
 
