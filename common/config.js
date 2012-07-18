@@ -11,6 +11,7 @@ exports.main = {
   quotaR: 0.02,         //minmal quotient (score / number) to be relevant
   urlSize: 128,         //maximal size of an url
 
+  s2sTimeout: 30000,
 
   banish:
     /127.0.0.1|localhost|lefrigo|twitter|facebook|linkedin|google|youtube|deezer|dailymotion|vimeo|identi.ca|wikipedia|amazon|ebay|imdb|vimeo|itunes|apple|manual|reference|rediff|myspace|hotmail|digg|thumblr|flickr|bbc\.co|(\.gov$)|reddit|adverti(s|z)ing|soir\.be|nytime/i,

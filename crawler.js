@@ -94,6 +94,10 @@ function Request (u, cb) {
     that.destroy(true);
   });
 
+  rq.setTimeout(_.s2sTimeout, function() {
+    that.destroy(true);
+  });
+
   this.r = rq;
 }
 
