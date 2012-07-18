@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 var http = require('http');
+var https = require('https');
 var url = require('url');
 var qr = require('querystring');
 var path = require('path');
@@ -24,6 +25,7 @@ var path = require('path');
 var db = require('./common/db.js');
 var _ = require('./common/config.js').main;
 var torrent = require('./common/torrent.js');
+var utils = require('./common/utils.js');
 
 
 var log = function () {};
@@ -38,7 +40,6 @@ const magnets = /magnet:[^\s"\]]+/gi;
 
 //------------------------------------------------------------------------------
 function Request (u, cb) {
-  log('> ' + u);
   this.u = u;
   this.o = url.parse(u);
   this.c = cb;
@@ -50,7 +51,7 @@ function Request (u, cb) {
     this.analyze = this.analyze_;
 
   var that = this;
-  var rq = http.get(this.o, function (r) {
+  var rq = ((this.o.protocol == 'https:') ? https : http).get(this.o, function (r) {
     if(r.statusCode && r.statusCode != 200) {
       if(r.statusCode >= 400)
         that.destroy(true);
@@ -217,7 +218,7 @@ manager = {
             }
 
             db.hosts.update(
-              { url: r.o.hostname || r.o.host },
+              { url: utils.host(r.o.hostname || r.o.host) },
               { $inc: { score: score, count: list.length } },
               { upsert: true },
               function () {
@@ -237,6 +238,7 @@ manager = {
               });
           } // -- cb
 
+          log('> ' + list.length + ' @ ' +  u.hostname);
           for(var i = 0; i < list.length; i++)
             list[i] = new Request(list[i].url, cb);
         });

@@ -22,6 +22,7 @@ var mongo = require('mongodb');
 
 var cfg = require('./config.js').db;
 var _ = require('./config.js').main;
+var utils = require('./utils.js');
 
 
 var server = new mongo.Server(cfg.host, cfg.port, cfg.options);
@@ -119,7 +120,7 @@ exports.addSources = function (l, cb) {
   var hs = {};
 
   for(var i = 0; i < l.length; i++) {
-    var h = url.parse(l[i]).hostname;
+    var h = utils.host(url.parse(l[i]).hostname);
     if(!h || h.search(_.banish) != -1)
       continue;
 
@@ -138,7 +139,7 @@ exports.addSources = function (l, cb) {
             continue;
 
           sources.remove({
-            url: RegExp('^https?://' + host.url.replace(/\./, '\\.') + '/.*', 'gi')
+            url: RegExp('^https?://([^\/]+\.)?' + host.url.replace(/\./, '\\.') + '/.*', 'gi')
           });
 
           delete hs[host.url];
