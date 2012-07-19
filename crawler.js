@@ -199,8 +199,12 @@ manager = {
     this.sources = [];
 
     var o = { date: null };
+
     if(up)
       o = {};
+    else if(stayOnDomain)
+      o.url = stayOnDomain;
+
 
     db.sources.findOne(o, function (e, d) {
       if(e || !d) {
