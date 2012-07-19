@@ -277,7 +277,8 @@ db.init(function () {
   }
 
   if(argv.length) {
-    for(var i = 2; i < argv.length; i++)
+    var n = argv.length;
+    for(var i = 0; i < argv.length; i++)
       db.sources.insert({ url: argv[i] }, function () {
         if(--n <= 0)
           manager.crawl();
