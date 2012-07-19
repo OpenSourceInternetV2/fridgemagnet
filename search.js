@@ -149,7 +149,7 @@ function TrackerUDP (magnets, cb) {
   setTimeout(function () {
     if(tm)
       sock.close();
-  }, cfg.trTimeout || 10000);
+  }, cfg.trTimeout || 5000);
 }
 
 
@@ -159,7 +159,7 @@ function TrackerUDP (magnets, cb) {
 function search(r, q, s) {
   var mt = parseInt(Date.now()/1000) - 2100;
   var ts = parseInt(Date.now()/1000);
-  q = q.match(/(\w)+/gi);
+  q = q.toLowerCase().match(/(\w)+/gi);
 
   /*if(s+50 > cfg.maxResults) {
     r.end('[]');
@@ -288,6 +288,13 @@ server = http.createServer(function(rq, r) {
       if(!q.q) {
         r.end('[]');
         return;
+      }
+
+      if(q.q.substr(0, 19) == 'magnet:?xt=urn:btih') {
+        var m = q.q.toLowerCase().match(/magnet:?\S+/);
+        if(m)
+          db.addMagnets(m);
+        //TODO: return it
       }
 
       search(r, q.q/*, (q.s && parseInt(q.s)) || 0*/);

@@ -89,7 +89,6 @@ exports.init = function (cb, cberr) {
 exports.addMagnets = function (s, l) {
   var o = [];
 
-  console.log(s);
   /* for(var i = 0; i < l.length; i++) {*/
   l.forEach(function(e, i) {
     var q = qr.parse(e.substring(8));

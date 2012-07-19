@@ -36,6 +36,7 @@ if(require('./common/config.js').main.log)
 const links = /\shref=\"[^"]+/gi;
 const magnets = /magnet:[^\s"\]]+/gi;
 
+var stayOnDomain = false;
 
 
 //------------------------------------------------------------------------------
@@ -94,9 +95,9 @@ function Request (u, cb) {
     that.destroy(true);
   });
 
-  rq.setTimeout(_.s2sTimeout, function() {
+  /*rq.setTimeout(_.s2sTimeout, function() {
     that.destroy(true);
-  });
+  });*/
 
   this.r = rq;
 }
@@ -108,7 +109,7 @@ Request.prototype = {
     if(fail)
       o.$set.fail = fail;
 
-    log('< ' + this.u);
+    //log('< ' + this.u);
     try {
       db.sources.update({ url: this.u }, o);
       if(this.c)
@@ -153,6 +154,9 @@ Request.prototype = {
         continue;
       else
         u = u.href;
+
+      if(stayOnDomain && u.search(stayOnDomain) == -1)
+        continue;
 
       if(u != this.u)
         s.push(u);
@@ -251,7 +255,7 @@ manager = {
 
 
   magnets: function (source, l) {
-    log('# ' + l.length + ' ' + l.join('\n# '));
+    log('# ' + l.length + ' ' + source.u);
     db.addMagnets(source.u, l);
   },
 }
@@ -259,6 +263,15 @@ manager = {
 
 //------------------------------------------------------------------------------
 db.init(function () {
+  if(process.argv.length > 2) {
+    var e = process.argv.indexOf('-s');
+
+    if(e != -1) {
+      process.argv.splice(e, 1);
+      stayOnDomain = new RegExp(process.argv[e], 'gi');
+    }
+  }
+
   if(process.argv.length > 2) {
     var n = process.argv.length-2;
     for(var i = 2; i < process.argv.length; i++)
