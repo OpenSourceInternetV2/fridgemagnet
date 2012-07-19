@@ -137,9 +137,10 @@ exports.addSources = function (l, cb) {
           if(host.count < _.quotaCount || (host.score / host.count) >= _.quotaR)
             continue;
 
-          sources.remove({
-            url: RegExp('^https?://([^\/]+\.)?' + host.url.replace(/\./, '\\.') + '/.*', 'gi')
-          });
+          var r = RegExp('^https?://([^\/]+\.)?' + host.url.replace(/\./, '\\.') + '/.*', 'gi');
+          log('- ' + r.toString());
+
+          sources.remove({ url: r });
 
           delete hs[host.url];
         }

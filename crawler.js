@@ -205,7 +205,6 @@ manager = {
     else if(stayOnDomain)
       o.url = stayOnDomain;
 
-
     db.sources.findOne(o, function (e, d) {
       if(e || !d) {
         if(e)
@@ -267,19 +266,19 @@ manager = {
 
 //------------------------------------------------------------------------------
 db.init(function () {
-  if(process.argv.length > 2) {
-    var e = process.argv.indexOf('-s');
+  var argv = process.argv.splice(2);
+  if(argv.length) {
+    var e = argv.indexOf('-s');
 
     if(e != -1) {
-      process.argv.splice(e, 1);
-      stayOnDomain = new RegExp(process.argv[e], 'gi');
+      stayOnDomain = new RegExp(argv[e+1], 'gi');
+      argv.splice(e, 2);
     }
   }
 
-  if(process.argv.length > 2) {
-    var n = process.argv.length-2;
-    for(var i = 2; i < process.argv.length; i++)
-      db.sources.insert({ url: process.argv[i] }, function () {
+  if(argv.length) {
+    for(var i = 2; i < argv.length; i++)
+      db.sources.insert({ url: argv[i] }, function () {
         if(--n <= 0)
           manager.crawl();
       });
