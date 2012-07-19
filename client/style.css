@@ -158,8 +158,6 @@ body[search] .dainput input {
   min-height: 3.5em;
 }
 
-.item > div + div {
-}
 
 .item, .item .sources a {
   font-size: 10pt;
@@ -227,7 +225,7 @@ body[search] .dainput input {
  */
 #content {
   margin-top: 0.5em;
-  width: 100%;
+  margin-left: 17em;
 }
 
 body:not([search]) #content {
@@ -237,9 +235,38 @@ body:not([search]) #content {
 
 #list {
   font-size: 11pt;
-  margin-left: 17em;
 }
 
+
+
+#loading {
+  margin: 10% auto;
+  display: none;
+  color: rgb(180, 180, 180);
+  text-align: center;
+  width: 4em;
+  height: 4em;
+  border: rgb(180, 180, 180) 1px solid;
+  border-radius: 2em;
+}
+
+body[search="1"] #loading {
+  display: block;
+  -moz-animation-duration: 10s;
+  -moz-animation-name: loading;
+  -moz-animation-iteration-count: infinite;
+  -webkit-animation-duration: 10s;
+  -webkit-animation-name: loading;
+  -webkit-animation-iteration-count: infinite;
+  -o-animation-duration: 10s;
+  -o-animation-name: loading;
+  -o-animation-iteration-count: infinite;
+}
+
+
+@-webkit-keyframes loading { 0% { -webkit-transform: rotate(0deg); } 100% { -webkit-transform: rotate(360deg); } }
+@-moz-keyframes loading { 0% { -moz-transform: rotate(0deg); } 100% { -moz-transform: rotate(360deg); } }
+@-o-keyframes loading { 0% { -o-transform: rotate(0deg); } 100% { -o-transform: rotate(360deg); } }
 
 /*
  * left

@@ -162,6 +162,7 @@ function xhrGet(url, onSuccess, onFail) {
 
   r.open('get', url, true);
   r.send();
+  return r;
 }
 
 
@@ -213,12 +214,18 @@ var server = {
     if(!iu)
       iu = u;
 
+    if(query.xhr)
+      query.xhr.abort();
+
+    document.body.setAttribute('search', '1');
+
     //FIXME: eventual conflict → verify current query before
-    xhrGet(cfg.server + 'search/?' + u, function (rq) {
+    query.xhr = xhrGet(cfg.server + 'search/?' + u, function (rq) {
+      query.xhr = null;
       if(iu != query.query)
         return;
 
-      document.body.setAttribute('search', '1');
+      document.body.setAttribute('search', '2');
 
       var list = JSON.parse(rq.responseText);
       if(!list.length) {
