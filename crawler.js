@@ -21,6 +21,7 @@ var https = require('https');
 var url = require('url');
 var qr = require('querystring');
 var path = require('path');
+var zlib = require('zlib');
 
 var db = require('./common/db.js');
 var _ = require('./common/config.js').main;
@@ -41,9 +42,6 @@ function Request (u, cb) {
 
 
   var ext = path.extname(u);
-
-  if(ext == '.torrent')
-    this.analyze = this.analyze_;
 
   var that = this;
   var rq = ((this.o.protocol == 'https:') ? https : http).get(this.o, function (r) {
@@ -71,7 +69,17 @@ function Request (u, cb) {
     }
 
     that.body = [];
-    r.on('data', function (d) {
+
+
+    var pipe = r;
+
+    if(r.headers['content-encoding'] == 'gzip') {
+      console.log(r.headers);
+      pipe = zlib.createGunzip();
+      r.pipe(pipe);
+    }
+
+    pipe.on('data', function (d) {
       that.body.push(d);
     })
     .on('end', function () {
@@ -108,7 +116,7 @@ Request.prototype = {
       db.sources.update({ url: this.u }, o);
       if(this.c)
         this.c(this, fail);
-    }catch(e) { console.log(e); }
+    } catch(e) { console.log(e); }
   },
 
 
@@ -203,6 +211,8 @@ manager = {
       if(e || !d) {
         if(e)
           console.log(e);
+        else if(o.url)
+          console.log('no more for ', o.url);
         manager.crawl(true);
         return;
       }
