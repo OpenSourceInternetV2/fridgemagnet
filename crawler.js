@@ -74,7 +74,6 @@ function Request (u, cb) {
     var pipe = r;
 
     if(r.headers['content-encoding'] == 'gzip') {
-      console.log(r.headers);
       pipe = zlib.createGunzip();
       r.pipe(pipe);
     }
