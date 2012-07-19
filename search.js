@@ -159,16 +159,22 @@ function TrackerUDP (magnets, cb) {
 function search(r, q, s) {
   var mt = parseInt(Date.now()/1000) - 2100;
   var ts = parseInt(Date.now()/1000);
-  q = q.toLowerCase().match(/(\w)+/gi);
 
-  /*if(s+50 > cfg.maxResults) {
-    r.end('[]');
-    return;
-  }*/
+  q = q.toLowerCase().match(/-?(\w)+/gi);
+  var incl = [],
+      excl = [];
 
-  db.magnets.find({
-      keywords: { $all: q }
-    }, {
+  for(var i = 0; i < q.length; i++)
+    if(q[i][0] == '-')
+      excl.push(q[i].substr(1));
+    else
+      incl.push(q[i]);
+
+  q = { keywords: { $all: incl }};
+  if(excl.length)
+    q.keywords.$nin = excl;
+
+  db.magnets.find(q, {
       _id: 0,
       keywords: 0,
     }, {

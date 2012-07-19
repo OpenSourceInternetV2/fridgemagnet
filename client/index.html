@@ -20,6 +20,7 @@
                 </a>
             </h1>
             <input id="search-input" type="text" placeholder="search" autofocus="autofocus">
+            <div class="fasthelp">prefix with a dash to exclude a word </div>
          </div>
 
          <img src="data/fridge.png" class="bg">
@@ -70,9 +71,9 @@
             </div>
         </div>
 
-        <div id="developpers" class="popup">
+        <div id="developers" class="popup">
             <div>
-                <h1>Developpers</h1>
+                <h1>developers</h1>
                 Look for something interesting, like source code? <a href="https://github.com/lordblackfox/fridgemagnet">Github</a> is <!-- 42 -->the answer.
                 <div style="text-align:center"><a href="#">Close</a></div>
             </div>
@@ -81,15 +82,16 @@
 
         <div class="footer">
             <span id="stats"></span>
-            - <a href="#developpers">developpers</a> - <a href="#about">about</a>
+            - <a href="#developers">developpers</a> - <a href="#about">about</a>
         </div>
 
 
         <div style="display:none">
             <div id="list-item" class="item" inherits="name=name">
                 <div class="stats">
-                    <span inherits="seeders" title="seeders"></span><br>
-                    <span inherits="leechers" title="leechers"></span>
+                    <span inherits="seeders"></span><br>
+                    <span inherits="leechers"></span>
+                    <div class="fasthelp">seeders / leechers</div>
                 </div>
                 <div>
                     <a class="name" inherits="name,magnet=href"></a>

@@ -48,6 +48,32 @@ a:hover {
   z-index: -1;
 }
 
+
+/*
+ * fasthelp
+ */
+.fasthelp {
+  position: absolute;
+  top: 0em;
+  right: 0.6em;
+
+  display: none;
+
+  color: grey;
+  font-style: italic;
+  font-size: 10pt;
+}
+
+body[search] .fasthelp {
+  top: 2.6em;
+}
+
+a:hover > .fasthelp, div:hover > .fasthelp, span:hover > .fasthelp {
+  display: block;
+}
+
+
+
 /*
  * popup
  */
@@ -224,7 +250,7 @@ body[search] .dainput input {
  * Content
  */
 #content {
-  margin-top: 0.5em;
+  margin-top: 0.6em;
   margin-left: 17em;
 }
 
@@ -292,7 +318,7 @@ body[search] .left {
   vertical-align: middle;
   font-size: 11pt;
   font-weight: normal;
-  margin-top: 0.5em;
+  margin-top: 0.6em;
   margin-bottom: 1em;
   margin-left: -1em;
 }
@@ -316,7 +342,7 @@ body[search] .left {
 
 .history-item {
   font-size: 10pt;
-  margin-bottom: 0.5em;
+  margin-bottom: 0.6em;
 }
 
 /*
