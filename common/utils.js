@@ -1,3 +1,5 @@
+var _ = require('./config.js').main;
+
 exports.host = function (host) {
   host = host.split('\.');
 
@@ -12,3 +14,9 @@ exports.host = function (host) {
 
   return host;
 }
+
+
+exports.log = function () {};
+if(_.log)
+  exports.log = function(v) { console.log(v.substr(0, 80)); }
+

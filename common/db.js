@@ -138,7 +138,7 @@ exports.addSources = function (l, cb) {
             continue;
 
           var r = RegExp('^https?://([^\/]+\.)?' + host.url.replace(/\./, '\\.') + '/.*', 'gi');
-          log('- ' + r.toString());
+          utils.log('- ' + r.toString());
 
           sources.remove({ url: r });
 

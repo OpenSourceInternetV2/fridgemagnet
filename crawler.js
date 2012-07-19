@@ -27,12 +27,6 @@ var _ = require('./common/config.js').main;
 var torrent = require('./common/torrent.js');
 var utils = require('./common/utils.js');
 
-
-var log = function () {};
-if(require('./common/config.js').main.log)
-  log = function(v) { console.log(v.substr(0, 80)); }
-
-
 const links = /\shref=\"[^"]+/gi;
 const magnets = /magnet:[^\s"\]]+/gi;
 
@@ -59,7 +53,7 @@ function Request (u, cb) {
       else (r.statusCode >= 300)
         try {
           manager.sources.push(r.headers.location);
-          log('% ' + u + ' → ' + r.headers.location);
+          utils.log('% ' + u + ' → ' + r.headers.location);
           that.destroy(r.headers.location);
         }
         catch(e) {}
@@ -249,7 +243,7 @@ manager = {
               });
           } // -- cb
 
-          log('> ' + list.length + ' @ ' +  u.hostname);
+          utils.log('> ' + list.length + ' @ ' +  u.hostname);
           for(var i = 0; i < list.length; i++)
             list[i] = new Request(list[i].url, cb);
         });
@@ -258,7 +252,7 @@ manager = {
 
 
   magnets: function (source, l) {
-    log('# ' + l.length + ' ' + source.u);
+    utils.log('# ' + l.length + ' ' + source.u);
     db.addMagnets(source.u, l);
   },
 }
