@@ -38,7 +38,7 @@ function decode (d) {
 
   //return
   return {
-    infohash: hash,
+    infohash: hash.toLowerCase(),
     size: size,
     name: name,
     magnet: 'magnet:?xt=urn:btih:' + hash + '&' +
