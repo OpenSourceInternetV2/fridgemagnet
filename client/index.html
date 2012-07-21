@@ -12,37 +12,44 @@
         <title>Da fridge</title>
     </head>
     <body onload="init();">
-         <div class="left">
-             <div>
-                 <h1><input type="checkbox" id="cfg-history">History</h1>
-                 <div id="history">
-                 </div>
-             </div>
-             <div id="help">
-                 <h1>Help us!</h1>
-                 <a href="http://flattr.com/thing/736737/" target="_blank">
-                     <img src="data/flattr.png" alt="Flattr this" title="Flattr this" border="0" /></a>
-                 <br>
-                 <br>
-                 <small>Wanna be a sponsor? Contact-us!</small>
-                 <!-- <input type="file" id="torrent-input" multiple> -->
-             </div>
+        <!-- left -->
+        <div class="left">
+            <div>
+                <h1><input type="checkbox" id="cfg-history">History</h1>
+                <div id="history">
+                </div>
+            </div>
+            <div id="help">
+                <h1>Help us!</h1>
+                <a href="http://flattr.com/thing/736737/" target="_blank">
+                    <img src="data/flattr.png" alt="Flattr this" title="Flattr this" border="0" />
+                </a>
+                <br>
+                <br>
+                <small>Wanna be a sponsor? Contact-us!</small>
+            </div>
         </div>
 
 
+        <!-- center -->
         <div id="dainput" class="dainput">
             <h1>
-                <a href="/">
+                <a href="./">
                     Da fridge<small><small> alpha</small></small>
                     <img src="logo.png">
                 </a>
             </h1>
             <input id="search-input" type="text" placeholder="search" autofocus="autofocus">
             <div class="fasthelp">prefix a word with a - symbol to exclude it </div>
-         </div>
+        </div>
 
-        <img src="data/fridge.png" class="bg">
 
+        <div id="featured" class="box" featured="true">
+            <a href="http://vo.do/justdoit" target="_blank">
+                <h1>Just do it</h1>
+                <img src="data/featured.jpg">
+            </a>
+        </div>
 
         <div id="content">
             <span>
@@ -55,8 +62,9 @@
         <div id="loading">&#9899;</div>
 
 
+        <!-- popups -->
         <div id="about" class="popup">
-            <div>
+            <div class="box">
                 <h1>What about? <small>(disclamer, terms of use blablabla)</small></h1>
                 <p>We are a search engine of <a href="http://en.wikipedia.org/wiki/Magnet_URI_scheme">magnet link</a> that can be used by people to access content using Bittorrent protocol. Our goal is to provide a full featured search engine using modern technologies to enhance your experience.</p>
 
@@ -93,13 +101,28 @@
             </div>
         </div>
 
-
-        <div class="footer">
-            <span id="stats"></span>
-            - <a href="#developers">developers</a> - <a href="#about">about</a>
+        <div id="about-featured" class="popup">
+            <div>
+                <h1>Wanna be featured?</h1>
+                <p>It is free, yes :) You just have to contact us, and we'll feature you as soon as we can. The only condition is to propose a project under a <a href="http://en.wikipedia.org/wiki/Free_license">Libre license</a>.</p>
+                <p>We don't ask any charge, because we think it is cool to support other projects.</p>
+                <h1>Previously featured</p>
+                <div style="text-align:center"><a href="#">Close</a></div>
+            </div>
         </div>
 
+        <!-- footer -->
+        <div class="footer">
+            <span id="stats"></span>
+            - <a href="#developers">developers</a>
+            - <a href="#about-featured">be featured</a>
+            - <a href="#about">about</a>
+        </div>
 
+        <img src="data/fridge.png" class="bg">
+
+
+        <!-- components -->
         <div style="display:none">
             <div id="list-item" class="item" inherits="name=name">
                 <div class="stats">

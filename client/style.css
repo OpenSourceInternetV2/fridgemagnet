@@ -50,6 +50,27 @@ a:hover {
 
 
 /*
+ *  boxes
+ */
+.box,
+.popup > div {
+  padding: 1em;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px rgb(140, 200, 200) solid;
+  box-shadow: 5px 5px 15px -10px black;
+}
+
+.box > *:first-child {
+  margin-top: 0em;
+}
+
+.box h1 {
+  margin: 0.6em auto;
+  font-size: 11pt;
+}
+
+
+/*
  * fasthelp
  */
 .fasthelp {
@@ -86,23 +107,10 @@ a:hover > .fasthelp, div:hover > .fasthelp, span:hover > .fasthelp {
   font-size:10pt;
 }
 
-.popup > div {
-  padding: 1em;
-
-  background-color: rgba(255, 255, 255, 0.95);
-  border: 1px rgb(140, 200, 200) solid;
-
-  box-shadow: 5px 5px 15px -10px black;
-}
-
 .popup:target {
   display: block;
 }
 
-
-.popup h1 {
-  font-size: 11pt;
-}
 
 .popup a[href="#"] {
   font-weight: bold;
@@ -116,6 +124,7 @@ a:hover > .fasthelp, div:hover > .fasthelp, span:hover > .fasthelp {
   width: 50%;
   height: 10%;
   margin: 7em auto;
+  margin-bottom: 3em;
 }
 
 .dainput input {
@@ -166,6 +175,33 @@ body[search] .dainput input {
 }
 
 
+
+/*
+ *  discover
+ */
+#featured {
+  display: none;
+  margin: 0em auto;
+  width: 22em;
+  height: 12.375em;
+/*  padding: 0em; */
+}
+
+
+body:not([search]) #featured[featured] {
+  display: block;
+}
+
+#featured h1 {
+  background-color: rgb(0, 0, 0);
+  position: absolute;
+  padding-right: 0.3em;
+}
+
+#featured img {
+  width: 100%;
+  height: 100%;
+}
 
 
 /*
@@ -350,10 +386,8 @@ body[search] .left {
  */
 .footer {
   width: 50%;
-  margin: auto;
+  margin: 3em auto;
 
-  margin-top: 50px;
-  margin-bottom: 150px;
   padding: 1em;
   border-top: 1px rgb(140, 200, 200) solid;
 
