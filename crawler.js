@@ -169,6 +169,7 @@ Request.prototype = {
 
   analyze_: function () {
     try {
+      utils.log('T ' + this.u);
       var o = {
         $addToSet: { sources: this.u }
       }
