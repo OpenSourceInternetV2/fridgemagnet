@@ -138,7 +138,11 @@ exports.addSources = function (l, cb) {
   var hs = {};
 
   for(var i = 0; i < l.length; i++) {
-    var h = utils.host(url.parse(l[i]).hostname);
+    var h = url.parse(l[i]);
+    if(!h.hostname)
+      continue;
+
+    h = utils.host(h.hostname);
     if(!h || h.search(_.banish) != -1)
       continue;
 

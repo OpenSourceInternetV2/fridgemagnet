@@ -229,7 +229,10 @@ manager = {
               return;
             }
 
-            function sources() {
+            db.hosts.update(
+              { url: utils.host(r.o.hostname) },
+              { $inc: { score: score, count: list.length } },
+              { upsert: true }, function() {
               list = manager.sources.sort();
               var l = [];
               for(var i = 0; i < list.length; i++)
@@ -243,22 +246,7 @@ manager = {
                 }
                 manager.crawl();
               });
-            }
-
-            var u;
-            try {
-              u = utils.host(r.o.hostname || r.o.host);
-            }
-            catch(e) {
-              console('host error: u');
-              sources();
-              return;
-            }
-
-            db.hosts.update(
-              { url: u },
-              { $inc: { score: score, count: list.length } },
-              { upsert: true }, sources);
+            });
           } // -- cb
 
           utils.log('> ' + list.length + ' @ ' +  u.hostname);
