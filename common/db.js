@@ -97,6 +97,8 @@ exports.addMagnets = function (s, l) {
     if(!q.dn)
       return;
 
+    q.xt = q.xt.toLowerCase(); //yep, this exists
+
     o.push(q.xt);
     k.push({
       infohash: q.xt,
