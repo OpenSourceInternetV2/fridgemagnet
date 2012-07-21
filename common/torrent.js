@@ -41,7 +41,7 @@ function decode (d) {
     infohash: hash,
     size: size,
     name: name,
-    magnet: 'magnet:?xt=urn:btih:' + hash +
+    magnet: 'magnet:?xt=urn:btih:' + hash + '&' +
       qr.stringify({
         'tr' : ann,
         'dn' : name,
