@@ -12,19 +12,6 @@
         <title>Da fridge</title>
     </head>
     <body onload="init();">
-        <div id="dainput" class="dainput">
-            <h1>
-                <a href="/">
-                    Da fridge<small><small> alpha</small></small>
-                    <img src="logo.png">
-                </a>
-            </h1>
-            <input id="search-input" type="text" placeholder="search" autofocus="autofocus">
-            <div class="fasthelp">prefix with a dash to exclude a word </div>
-         </div>
-
-         <img src="data/fridge.png" class="bg">
-
          <div class="left">
              <div>
                  <h1><input type="checkbox" id="cfg-history">History</h1>
@@ -36,12 +23,32 @@
                  <a href="http://flattr.com/thing/736737/" target="_blank">
                      <img src="data/flattr.png" alt="Flattr this" title="Flattr this" border="0" /></a>
                  <br>
+                 <br>
+                 <small>Wanna be a sponsor? Contact-us!</small>
                  <!-- <input type="file" id="torrent-input" multiple> -->
              </div>
         </div>
 
+
+        <div id="dainput" class="dainput">
+            <h1>
+                <a href="/">
+                    Da fridge<small><small> alpha</small></small>
+                    <img src="logo.png">
+                </a>
+            </h1>
+            <input id="search-input" type="text" placeholder="search" autofocus="autofocus">
+            <div class="fasthelp">prefix a word with a - symbol to exclude it </div>
+         </div>
+
+        <img src="data/fridge.png" class="bg">
+
+
         <div id="content">
-            <span id="n-results"></span>
+            <span>
+                <div class="fasthelp">100 results but nothing interesting? Try something else &#9752;</div>
+                <span id="n-results"></span>
+            </span>
             <div id="list">
             </div>
         </div>
@@ -56,6 +63,13 @@
                 <p>We respect your privacy, we don't store any cookie on your computer or register your IP address. We don't store your personnal information or any information that can identify you. We store data like the rate you give to a magnet, but we don't relie this information to you. We are not available to make a profil of your navigation, and we don't want to. <a href="http://dontrack.us/">learn more</a></p>
 
                 <p>About the fridge in background: <a href="https://openclipart.org/detail/169564/fridge-by-firstl4rs">there</a></p>
+
+                <h1>Help us</h1>
+                We obviously need money to rule this website. You wanna help? <a href="http://flattr.com/thing/736737/">flattr-us</a> or become a sponsor. Our costs for the moment:
+                <ul>
+                    <li>DNS: 15€/year</li>
+                    <li>Hosting: 5€/months (certainly more soon)</li>
+                </ul>
 
                 <h1>Disclaimer</h1>
                 <p>This website doesn't host any file that are under copyright, so DMCA takedown, or demands of removal wont be followed. For more information, take a look on the Internet to know what is a magnet URI.</p>
