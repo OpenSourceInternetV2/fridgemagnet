@@ -222,32 +222,43 @@ manager = {
         .toArray(function (err, list) {
           var score = 0;
           var n = list.length;
-          var cb = function (r, e) {
+          function cb (r, e) {
             n--;
             if(n) {
               score += r.score || 0;
               return;
             }
 
-            db.hosts.update(
-              { url: utils.host(r.o.hostname || r.o.host) },
-              { $inc: { score: score, count: list.length } },
-              { upsert: true },
-              function () {
-                list = manager.sources.sort();
-                var l = [];
-                for(var i = 0; i < list.length; i++)
-                  if(list[i+1] && list[i+1] != list[i])
-                    l.push(list[i]);
+            function sources() {
+              list = manager.sources.sort();
+              var l = [];
+              for(var i = 0; i < list.length; i++)
+                if(list[i+1] && list[i+1] != list[i])
+                  l.push(list[i]);
 
-                db.addSources(l, function (e) {
-                  if(e) {
-                    console.log(e);
-                    return;
-                  }
-                  manager.crawl();
-                });
+              db.addSources(l, function (e) {
+                if(e) {
+                  console.log(e);
+                  return;
+                }
+                manager.crawl();
               });
+            }
+
+            var u;
+            try {
+              u = utils.host(r.o.hostname || r.o.host);
+            }
+            catch(e) {
+              console('host error: u');
+              sources();
+              return;
+            }
+
+            db.hosts.update(
+              { url: u },
+              { $inc: { score: score, count: list.length } },
+              { upsert: true }, sources);
           } // -- cb
 
           utils.log('> ' + list.length + ' @ ' +  u.hostname);

@@ -88,27 +88,46 @@ exports.init = function (cb, cberr) {
  */
 exports.addMagnets = function (s, l) {
   var o = [];
+  var k = [];
 
-  /* for(var i = 0; i < l.length; i++) {*/
-  l.forEach(function(e, i) {
-    var q = qr.parse(e.substring(8));
+  for(var i = 0; i < l.length; i++) {
+    var q = qr.parse(l[i].substring(8));
 
     //FIXME for the moment:
     if(!q.dn)
       return;
 
     o.push(q.xt);
-    l[i] = {
+    k.push({
       infohash: q.xt,
-      magnet: e,
+      magnet: l[i],
       name: q.dn,
       keywords: q.dn.toLowerCase().match(/(\w)+/gi),
-    };
-  });
+    });
+  }
 
-  magnets.insert(l);
-  //console.log(l);
-  magnets.update({ infohash: { $in: o } }, { $addToSet: { sources: s }});
+  /*  Algo: - add the magnets
+   *        - update list of sources
+   *        - score the page:
+   *          - for all updated element, if there is one source, that's for our
+   *            source, so add 1 point to score
+   *          - update score
+   */
+  magnets.insert(k, function () {
+    magnets.update({ infohash: { $in: o } }, { $addToSet: { sources: s }}, function () {
+      magnets.find({ infohash: { $in: o } }, { infohash: 1, sources: 1 })
+      .toArray(function (err, list) {
+        if(err || !list)
+          return;
+
+        var score = 0;
+        for(var i = 0; i < list.length; i++)
+          if(list[i].sources && list[i].sources.length == 1)
+            score++;
+        sources.update({ url: s }, { $inc: { score: score, count: 1 }});
+      });
+    });
+  });
 }
 
 
