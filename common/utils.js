@@ -12,7 +12,10 @@ exports.host = function (host) {
   else
     host = host[0];
 
-  return host + '.' + ext;
+  if(!ext.length)
+    return host;
+
+  return host + '.' + ext.substr(0, ext.length-1);
 }
 
 
