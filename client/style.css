@@ -290,6 +290,7 @@ body:not([search]) #featured[featured] {
 #content {
   margin-top: 0.6em;
   margin-left: 15em;
+  margin-right: 0.6em;
 }
 
 body:not([search]) #content {
@@ -371,8 +372,7 @@ body[search="1"] #loading {
  */
 .footer {
   width: 50%;
-  margin: 3em 0%;
-  margin-left: 30%;
+  margin: 3em auto;
 
   padding: 1em;
   border-top: 1px rgb(140, 200, 200) solid;
@@ -382,3 +382,9 @@ body[search="1"] #loading {
   font-style: italic;
   color: grey;
 }
+
+body[search] .footer {
+  margin: 3em 0%;
+  margin-left: 30%;
+}
+
