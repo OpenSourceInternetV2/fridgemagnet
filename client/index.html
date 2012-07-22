@@ -12,25 +12,6 @@
         <title>Da fridge</title>
     </head>
     <body onload="init();">
-        <!-- left -->
-        <div class="left">
-            <div>
-                <h1><input type="checkbox" id="cfg-history">History</h1>
-                <div id="history">
-                </div>
-            </div>
-            <div id="help">
-                <h1>Help us!</h1>
-                <a href="http://flattr.com/thing/736737/" target="_blank">
-                    <img src="data/flattr.png" alt="Flattr this" title="Flattr this" border="0" />
-                </a>
-                <br>
-                <br>
-                <small>Wanna be a sponsor? Contact-us!</small>
-            </div>
-        </div>
-
-
         <!-- center -->
         <div id="dainput" class="dainput">
             <h1>
@@ -60,6 +41,26 @@
             </div>
         </div>
         <div id="loading">&#9899;</div>
+
+
+        <!-- left -->
+        <div class="left">
+            <div>
+                <h1><input type="checkbox" id="cfg-history">History</h1>
+                <div id="history">
+                </div>
+            </div>
+            <div id="help">
+                <h1>Help us!</h1>
+                <a href="http://flattr.com/thing/736737/" target="_blank">
+                    <img src="data/flattr.png" alt="Flattr this" title="Flattr this" border="0" />
+                </a>
+                <br>
+                <br>
+                <small>Wanna be a sponsor? Contact-us!</small>
+            </div>
+        </div>
+
 
 
         <!-- popups -->
@@ -95,7 +96,7 @@
 
         <div id="developers" class="popup">
             <div>
-                <h1>developers</h1>
+                <h1>Developers</h1>
                 Look for something interesting, like source code? <a href="https://github.com/lordblackfox/fridgemagnet">Github</a> is <!-- 42 -->the answer.
                 <div style="text-align:center"><a href="#">Close</a></div>
             </div>
@@ -107,14 +108,17 @@
                 <p>It is free, yes :) You just have to contact us, and we'll feature you as soon as we can. The only condition is to propose a project under a <a href="http://en.wikipedia.org/wiki/Free_license">Libre license</a>.</p>
                 <p>We don't ask for any charge, because we think it is cool to support other projects.</p>
                 <h1>Previously featured</h1>
+                <ul>
+                    <li><a href="http://vo.do/justdoit">Just do it</a></li>
+                </ul>
                 <div style="text-align:center"><a href="#">Close</a></div>
             </div>
         </div>
 
         <!-- footer -->
         <div class="footer">
-            <span id="stats"></span>
-            - <a href="#developers">developers</a>
+            <span id="stats"></span><br>
+            <a href="#developers">developers</a>
             - <a href="#about-featured">be featured</a>
             - <a href="#about">about</a>
         </div>
@@ -133,7 +137,7 @@
                 <div>
                     <a class="name" inherits="name,magnet=href"></a>
                 </div>
-                <div>
+                <div class="expandable">
                     <span class="note"
                         inherits="magnet=magnet,note=note,noted=noted,noteT=noteT,noteN=noteN">
                           <a onclick="ui.noteClick(this, false)">&#9785;</a>
@@ -150,6 +154,7 @@
                           <span>&#9734;</span>
                     </span>
                     <span class="size" inherits="size"></span>
+                    <br>
                     <span class="sources" inherits="sources"></span>
                 </div>
             </div>

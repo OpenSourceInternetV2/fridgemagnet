@@ -7,7 +7,7 @@ exports.main = {
   maxRequests: 150,      //maximum crawler's parallel requests
 
   // quota
-  quotaCount: 70,      //minimum of scanned before compare quota
+  quotaCount: 200,      //minimum of scanned before compare quota
   quotaR: 0.02,         //minmal quotient (score / number) to be relevant
   urlSize: 128,         //maximal size of an url
 

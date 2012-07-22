@@ -53,19 +53,19 @@ a:hover {
  *  boxes
  */
 .box,
-.popup > div {
+.popup > div,
+.left > div {
   padding: 1em;
   background-color: rgba(255, 255, 255, 0.95);
   border: 1px rgb(140, 200, 200) solid;
   box-shadow: 5px 5px 15px -10px black;
 }
 
-.box > *:first-child {
-  margin-top: 0em;
-}
-
-.box h1 {
+.box h1,
+.popup > div h1,
+.left > div h1 {
   margin: 0.6em auto;
+  margin-bottom: 0.6em;
   font-size: 11pt;
 }
 
@@ -150,7 +150,7 @@ a:hover > .fasthelp, div:hover > .fasthelp, span:hover > .fasthelp {
 
 body[search] .dainput {
   margin: 0em;
-  width: 100%;
+  width: inherit;
   height: 3.4em;
 
   background-color: rgb(240, 240, 240);
@@ -182,8 +182,8 @@ body[search] .dainput input {
 #featured {
   display: none;
   margin: 0em auto;
-  width: 22em;
-  height: 12.375em;
+  width: 352px;
+  height: 198px;
 /*  padding: 0em; */
 }
 
@@ -239,11 +239,21 @@ body:not([search]) #featured[featured] {
 }
 
 
+.item .expandable {
+  max-height: 4.2em;
+  overflow: hidden;
+}
+
+.item .expandable:hover {
+  max-height: none;
+}
+
+
 .item .note,
 .item .size {
   margin-right: 1em;
   color: grey;
-  font-size: 12pt;
+  font-size: 13pt;
 }
 
 .item .note a { text-decoration: none; }
@@ -274,13 +284,12 @@ body:not([search]) #featured[featured] {
 
 
 
-
 /*
  * Content
  */
 #content {
   margin-top: 0.6em;
-  margin-left: 17em;
+  margin-left: 15em;
 }
 
 body:not([search]) #content {
@@ -340,41 +349,17 @@ body[search="1"] #loading {
   width: 14em;
 }
 
-body:not([search]) .left > div {
-  border: 1px rgb(140, 200, 200) solid;
-}
+.left:hover, body[search] .left { left: 0em; }
 
-.left:hover,
-body[search] .left {
-  left: 0em;
-}
-
-
-.left h1 {
-  vertical-align: middle;
-  font-size: 11pt;
-  font-weight: normal;
-  margin-top: 0.6em;
-  margin-bottom: 1em;
-  margin-left: -1em;
-}
+.left h1 input { margin-left: -1.4em; }
 
 .left > div {
   margin-bottom: 1em;
   margin-left: 1em;
-  padding-left: 2em;
-  padding-bottom: 1em;
-  border-right: 1px rgb(140, 200, 200) solid;
-  border-bottom: 1px rgb(140, 200, 200) solid;
-
-  background-color: rgba(255, 255, 255, 0.8);
-
-  box-shadow: 5px 5px 15px -10px black;
+  padding-left: 1.4em;
+  padding-top: 0em;
 }
 
-.left h1 input {
-  margin-left: -1em;
-}
 
 .history-item {
   font-size: 10pt;
@@ -386,7 +371,8 @@ body[search] .left {
  */
 .footer {
   width: 50%;
-  margin: 3em auto;
+  margin: 3em 0%;
+  margin-left: 30%;
 
   padding: 1em;
   border-top: 1px rgb(140, 200, 200) solid;
