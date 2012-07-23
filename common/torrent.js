@@ -2,7 +2,7 @@ var qr = require('querystring');
 var crypto = require('crypto');
 var bencode = require('./bencode.js');
 
-function decode (d) {
+exports.decode = function (d) {
   var o = bencode.decode(d);
   if(!o.info)
     return;
@@ -48,7 +48,5 @@ function decode (d) {
       })
   };
 }
-
-exports.decode = decode;
 
 
