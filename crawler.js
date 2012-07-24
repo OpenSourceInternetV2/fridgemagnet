@@ -267,20 +267,18 @@ manager = {
 
 //------------------------------------------------------------------------------
 db.init(function () {
-  var argv = process.argv.splice(2);
-  if(argv.length) {
-    var e = argv.indexOf('-s');
+  var a = process.argv;
+  var o = utils.argv('fridgemagnet - crawler', a, {
+    '-s': { d: 'crawl on url matching the regexp' },
+  })
 
-    if(e != -1) {
-      stayOnDomain = new RegExp(argv[e+1], 'gi');
-      argv.splice(e, 2);
-    }
-  }
+  if(o['-s'])
+    stayOnDomain = new RegExp(o['-s'], 'gi');
 
-  if(argv.length) {
-    var n = argv.length;
-    for(var i = 0; i < argv.length; i++)
-      db.sources.insert({ url: argv[i] }, function () {
+  if(a.length) {
+    var n = a.length;
+    for(var i = 0; i < a.length; i++)
+      db.sources.insert({ url: a[i] }, function () {
         if(--n <= 0)
           manager.crawl();
       });

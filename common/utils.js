@@ -1,5 +1,40 @@
 var _ = require('./config.js').main;
 
+
+exports.argv = function (n, a, o) {
+  a.splice(0, 2);
+
+  if(a.indexOf('-h') != -1 ||
+     a.indexOf('--help') != -1) {
+       console.log(n, '\n-h --help \t print usage');
+
+       for(var i in o)
+         console.log(i, '\t\t', o[i].d);
+    return;
+  }
+
+  console.log(a);
+  for(var i in o) {
+    var e = a.indexOf(i);
+    if(e == -1) {
+      o[i] = null;
+      continue;
+    }
+
+    if(o[i].b) {
+      o[i] = true;
+      a.splice(e, 1);
+    }
+    else {
+      o[i] = a[e+1];
+      a.splice(e, 2);
+    }
+  }
+
+  return o;
+}
+
+
 exports.host = function (host) {
   host = host.split('\.');
 
