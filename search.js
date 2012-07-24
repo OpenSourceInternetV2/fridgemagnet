@@ -26,6 +26,7 @@ var http = require('http');
 var dgram = require('dgram');
 var qr = require('querystring');
 var url = require('url');
+var zlib = require('zlib');
 
 var db = require('./common/db.js');
 var cfg = require('./common/config.js').search;
@@ -38,7 +39,7 @@ transaction_id = parseInt(Math.random()*100000000);
 
 /* Search
  */
-function search(r, q, n) {
+function search(rq, r, q, n) {
   var mt = parseInt(Date.now()/1000) - 2100;
   var ts = parseInt(Date.now()/1000);
 
@@ -71,26 +72,35 @@ function search(r, q, n) {
         return;
       }
 
-      if(n)
-        r.end(JSON.stringify(list));
 
-      var success = false;
-
-      setTimeout(function () {
-        if(!success)
-          r.end(JSON.stringify(list));
-      }, 4000);
-
-      //even if no stats are asked, proceed to stats
-      trBox = new trackers.TrackerBox(list, function(err) {
-        success = true;
-        if(n)
+      var s = null;
+      function response() {
+        if(s)
           return;
 
-        if(err)
-          r.end('[]');
+        s = JSON.stringify(list);
+        if(rq.headers['accept-encoding'] &&
+           rq.headers['accept-encoding'].search('gzip') != -1) {
+          zlib.gzip(s, function(e, d) {
+            if(e)
+              r.end(s);
+            else {
+              r.setHeader('content-encoding', 'gzip');
+              r.end(d);
+            }
+          });
+        }
         else
-          r.end(JSON.stringify(list));
+          r.end(s);
+      }
+
+      if(n)
+        response();
+
+      setTimeout(function () { response(); }, 4000);
+
+      trBox = new trackers.TrackerBox(list, function(err) {
+        response();
       });
     });
 }
@@ -149,7 +159,7 @@ server = http.createServer(function(rq, r) {
         //TODO: return it
       }
 
-      search(r, q.q, q.nosl);
+      search(rq, r, q.q, q.nosl);
       break;
 
     case 'note':
