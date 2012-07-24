@@ -29,137 +29,20 @@ var url = require('url');
 
 var db = require('./common/db.js');
 var cfg = require('./common/config.js').search;
+var trackers = require('./common/trackers.js');
 
 //------------------------------------------------------------------------------
 transaction_id = parseInt(Math.random()*100000000);
-
-blackTrackers = [ 'udp://tracker.openbittorrent.com:80' ];
-
-
-function TrackerUDP (magnets, cb) {
-  var host = magnets[0];
-  var port = magnets[1];
-  var sock = dgram.createSocket('udp4');
-
-  magnets.splice(0,2);
-
-  var conn_id, trans_id;
-  var success = false;
-  var stack;
-
-  function action(a, d) {
-    trans_id = ++transaction_id;
-    var b = new Buffer(8);
-    b.writeInt32BE(a, 0);             //action
-    b.writeInt32BE(trans_id, 4);   //transaction id
-
-    if(!d)
-      b = Buffer.concat([conn_id, b]);
-    else
-      b = Buffer.concat([conn_id, b, d]);
-
-    sock.send(b, 0, b.length, port, host,
-      function(e, b) {
-        if(e)
-          console.log('error: ' + e);
-      });
-  }
-
-
-  function scrap () {
-    stack = magnets.splice(0, 50);
-    var h = '';
-    for(var i = 0; i < stack.length; i++)
-      h += stack[i].h;
-
-    try {
-      action(2, new Buffer(h, 'hex'));
-    }
-    catch(e) {
-      sock.close();
-    }
-  }
-
-
-  function onScrap(m) {
-    for(var i = 0, k = 8; i < stack.length; i++, k+=12) {
-      var stats = stack[i].m.stats;
-      stats.seeders = m.readInt32BE(k);
-      stats.leechers = m.readInt32BE(k+8);
-
-      db.magnets.update({ magnet: stack[i].m.magnet }, { $set: {
-          'stats.date': stats.date,
-          'stats.seeders': stats.seeders,
-          'stats.leechers': stats.leechers
-          }
-      });
-    }
-
-
-    if(magnets.length) {
-      scrap();
-      return;
-    }
-
-    success = true;
-    sock.close();
-  }
-
-
-  var tm = true;
-
-  sock.on('message', function(m) {
-    tm = false;
-    var d = {
-      action: m.readInt32BE(0),
-      transaction: m.readInt32BE(4),
-    };
-
-    if(d.transaction != trans_id) {
-      //console.log('not same transaction id ' + d.transaction + ' but should be ' + this.tr);
-      sock.close();
-      return;
-    }
-
-    switch(d.action) {
-      case 0:
-        conn_id = m.slice(8);
-        scrap();
-        break;
-
-      case 2:
-        onScrap(m);
-        break;
-
-      case 3:
-        sock.close();
-        return;
-    }
-  })
-  .on('close', function () {
-    cb(success);
-  })
-  .on('error', function () {
-    cb(false);
-  });
-
-  conn_id = new Buffer([0x00, 0x00, 0x04, 0x17, 0x27, 0x10, 0x19, 0x80]);
-  action(0);
-
-  setTimeout(function () {
-    if(tm)
-      sock.close();
-  }, cfg.trTimeout || 5000);
-}
 
 
 
 /* Search
  */
-function search(r, q, s) {
+function search(r, q, n) {
   var mt = parseInt(Date.now()/1000) - 2100;
   var ts = parseInt(Date.now()/1000);
 
+  //request parseing
   q = q.toLowerCase().match(/-?(\w)+/gi);
   var incl = [],
       excl = [];
@@ -174,12 +57,12 @@ function search(r, q, s) {
   if(excl.length)
     q.keywords.$nin = excl;
 
+  // db request
   db.magnets.find(q, {
       _id: 0,
       keywords: 0,
     }, {
       limit: cfg.maxResults,
-//      skip: s,
     })
     .sort({ 'stats.seeders': -1 })
     .toArray(function (err, list) {
@@ -188,64 +71,27 @@ function search(r, q, s) {
         return;
       }
 
-      var tr = {};
-      for(var i = 0; i < list.length; i++)
-        try {
-          var item = list[i];
-          if(item.stats) {
-            if(item.stats.date && item.stats.date >= mt)
-              continue;
-
-            item.stats.date = ts;
-            item.stats.seeders = 0;
-            item.stats.leechers = 0;
-          }
-          else
-            item.stats = {
-              date: ts,
-              seeders: 0,
-              leechers: 0
-            }
-
-          var m = qr.parse(item.magnet.substr(8));
-          if(!m.tr)
-            continue;
-
-          //for the moment, only to one tracker
-          //and only for udp:/
-          var p, j = 0;
-
-          for(var j = 0; j <= m.tr.length; j++) {
-            if(blackTrackers.indexOf(m.tr[j]) != -1)
-              continue;
-
-            p = url.parse(m.tr[j]);
-            if(p.protocol != 'udp:')
-              continue;
-
-            if(!tr[p.host])
-              tr[p.host] = [p.hostname, p.port];
-
-            var h = m.xt.lastIndexOf(':');
-            h = (h != -1) ? m.xt.substr(h+1) : m.xt;
-            tr[p.host].push({ m: item, h: h});
-          }
-        }
-        catch(e) {}
-
-      //we never know...
-      var n = Object.keys(tr).length;
-      if(!n) {
+      if(n)
         r.end(JSON.stringify(list));
-        return;
-      }
 
-      for(var i in tr)
-        TrackerUDP(tr[i], function() {
-            n--;
-            if(!n)
-              r.end(JSON.stringify(list));
-        });
+      var success = false;
+
+      setTimeout(function () {
+        if(!success)
+          r.end(JSON.stringify(list));
+      }, 4000);
+
+      //even if no stats are asked, proceed to stats
+      trBox = new trackers.TrackerBox(list, function(err) {
+        success = true;
+        if(n)
+          return;
+
+        if(err)
+          r.end('[]');
+        else
+          r.end(JSON.stringify(list));
+      });
     });
 }
 
@@ -303,7 +149,7 @@ server = http.createServer(function(rq, r) {
         //TODO: return it
       }
 
-      search(r, q.q/*, (q.s && parseInt(q.s)) || 0*/);
+      search(r, q.q, q.nosl);
       break;
 
     case 'note':

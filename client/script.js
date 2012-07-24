@@ -238,7 +238,7 @@ var server = {
       }
 
       list.sort(function (a, b) {
-        return a.stats.seeders < b.stats.seeders;
+        return (((a.stats && a.stats.seeders) || 0) < ((b.stats && b.stats.seeders) || 0));
       });
 
       var fr = document.createDocumentFragment();

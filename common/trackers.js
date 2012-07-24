@@ -1,21 +1,21 @@
-var http = require('http');
 var dgram = require('dgram');
 var qr = require('querystring');
 var url = require('url');
 
-var db = require('./common/db.js');
-var cfg = require('./common/config.js').search;
+var db = require('./db.js');  //initialized by the caller
+var cfg = require('./config.js').search;
 
-
-transactionID = parseInt(Math.random()*100000000);
 
 var trackers = {}
+transactionID = parseInt(Math.random()*100000000);
 
 
 function TrackerUDP (port, host, url) {
   this.port = port;
   this.host = host;
   this.url = url;
+
+  this.boxes = [];
 
   this.sock = dgram.createSocket('udp4');
   this.cnID_ = new Buffer([0x00, 0x00, 0x04, 0x17, 0x27, 0x10, 0x19, 0x80]);
@@ -46,7 +46,7 @@ function TrackerUDP (port, host, url) {
       case 3:
         if(!that.cnID) {
           that.close(true);
-          return,
+          return;
         }
 
         that.cnID = null;
@@ -99,7 +99,7 @@ TrackerUDP.prototype = {
 
   onScrap: function (m) {
     var s = this.stack;
-    for(var i = 0, k = 8; i < s.length; i++, k+=8) {
+    for(var i = 0, k = 8; i < s.length; i++, k+=12) {
       var stats = s[i].stats;
       stats.seeders = m.readInt32BE(k);
       stats.leechers = m.readInt32BE(k+8);
@@ -136,13 +136,14 @@ TrackerUDP.prototype = {
     var s = [];
     var l = box.list;
     var h = '';
-    for(var i = 0; i < l.length && m.length < 70; i++)
+    for(var i = 0; i < l.length && s.length < 25; i++)
       if(l[i].trackers.indexOf(this.url) != -1) {
-        h += l[i].infohash.substr(l[i].infohash.lastIndexOf(':'));
-        s.push(l.splice(i, 1));
+        h += l[i].infohash.substr(l[i].infohash.lastIndexOf(':')+1);
+        s = s.concat(l.splice(i, 1));
         i--;
       }
 
+    console.log(s.length, ' for ', this.host);
     this.box = box;
     this.stack = s;
     this.action(2, new Buffer(h, 'hex'));
@@ -205,11 +206,16 @@ function TrackerBox (list, cb) {
       }
     }
     catch(e) {
+      console.log(e);
+    }
+
+
+    if(!Object.keys(this.tr).length) {
       cb(false);
       return;
     }
 
-    for(var i in tr)
+    for(var i in this.tr)
       this.tr[i].push(this);
 }
 
@@ -227,8 +233,14 @@ TrackerBox.prototype = {
     else if(this.list.length)
       return;
 
+    console.log(this.list);
     this.cb_(err);
   }
 }
 
+
+
+exports.trackers = trackers;
+exports.TrackerUDP = TrackerUDP;
+exports.TrackerBox = TrackerBox;
 
