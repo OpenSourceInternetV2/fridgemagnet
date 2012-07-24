@@ -143,7 +143,6 @@ TrackerUDP.prototype = {
         i--;
       }
 
-    console.log(s.length, ' for ', this.host);
     this.box = box;
     this.stack = s;
     this.action(2, new Buffer(h, 'hex'));
@@ -233,7 +232,6 @@ TrackerBox.prototype = {
     else if(this.list.length)
       return;
 
-    console.log(this.list);
     this.cb_(err);
   }
 }
