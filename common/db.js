@@ -50,8 +50,7 @@ exports.init = function (cb, cberr) {
       }
 
       magnets = coll;
-      coll.ensureIndex({ 'infohash': 1 }, { unique: true, dropDups: true }, function () {});
-      coll.ensureIndex({ 'keywords': 1 }, function () {});
+      coll.ensureIndex({ 'kwd': 1 }, function () {});
 
       db.collection('hosts', function (err, coll) {
         if(err) {
@@ -101,10 +100,10 @@ exports.addMagnets = function (s, l) {
 
     o.push(q.xt);
     k.push({
-      infohash: q.xt,
-      magnet: l[i],
-      name: q.dn,
-      keywords: q.dn.toLowerCase().match(/(\w)+/gi),
+      _id: q.xt,
+      dn: q.dn,
+      tr: q.tr,
+      kwd: q.dn.toLowerCase().match(/(\w\w\w*)/gi),
     });
   }
 
@@ -116,15 +115,15 @@ exports.addMagnets = function (s, l) {
    *          - update score
    */
   magnets.insert(k, function () {
-    magnets.update({ infohash: { $in: o } }, { $addToSet: { sources: s }}, function () {
-      magnets.find({ infohash: { $in: o } }, { infohash: 1, sources: 1 })
+    magnets.update({ _id: { $in: o } }, { $addToSet: { src: s }}, function () {
+      magnets.find({ _id: { $in: o } }, { _id: 1, src: 1 })
       .toArray(function (err, list) {
         if(err || !list)
           return;
 
         var score = 0;
         for(var i = 0; i < list.length; i++)
-          if(list[i].sources && list[i].sources.length == 1)
+          if(list[i].src && list[i].src.length == 1)
             score++;
         sources.update({ url: s }, { $inc: { score: score, count: 1 }});
       });

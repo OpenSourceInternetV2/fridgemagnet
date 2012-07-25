@@ -13,6 +13,7 @@ exports.decode = function (d) {
     hash = hash.toString('hex');
   else
     hash = crypto.createHash('sha1').update(bencode.encode(o.info)).digest('hex');
+  hash = 'urn:btih:' + hash;
 
   //size
   var size = 0;
@@ -38,14 +39,11 @@ exports.decode = function (d) {
 
   //return
   return {
-    infohash: hash.toLowerCase(),
-    size: size,
-    name: name,
-    magnet: 'magnet:?xt=urn:btih:' + hash + '&' +
-      qr.stringify({
-        'tr' : ann,
-        'dn' : name,
-      })
+    _id: 'urn:btih:' + hash ,
+    dn: name,
+    tr : ann,
+    siz: size,
+    kwd: name.toLowerCase().match(/(\w)+/gi)
   };
 }
 

@@ -100,14 +100,14 @@ TrackerUDP.prototype = {
   onScrap: function (m) {
     var s = this.stack;
     for(var i = 0, k = 8; i < s.length; i++, k+=12) {
-      var stats = s[i].stats;
-      stats.seeders = m.readInt32BE(k);
-      stats.leechers = m.readInt32BE(k+8);
+      var sta = s[i].sta;
+      sta.see = m.readInt32BE(k);
+      sta.lee = m.readInt32BE(k+8);
 
-      db.magnets.update({ infohash: s[i].infohash }, { $set: {
-        'stats.date': stats.date,
-        'stats.seeders': stats.seeders,
-        'stats.leechers': stats.leechers
+      db.magnets.update({ _id: s[i]._id }, { $set: {
+        'sta.dat': sta.dat,
+        'sta.see': sta.see,
+        'sta.lee': sta.lee
       }});
     }
 
@@ -137,8 +137,8 @@ TrackerUDP.prototype = {
     var l = box.list;
     var h = '';
     for(var i = 0; i < l.length && s.length < 25; i++)
-      if(l[i].trackers.indexOf(this.url) != -1) {
-        h += l[i].infohash.substr(l[i].infohash.lastIndexOf(':')+1);
+      if(l[i].tr.indexOf(this.url) != -1) {
+        h += l[i]._id.substr(l[i]._id.lastIndexOf(':')+1);
         s = s.concat(l.splice(i, 1));
         i--;
       }
@@ -171,29 +171,23 @@ function TrackerBox (list, cb) {
     try {
       var item = list[i];
 
-      if(!item.stats)
-        item.stats = {};
+      if(!item.sta)
+        item.sta = {};
       else
-        if(item.stats.date && item.stats.date >= mt)
+        if(item.sta.dat && item.sta.dat >= mt)
           continue;
 
-      item.stats.date = ts;
-      item.stats.leechers = 0;
-      item.stats.seeders = 0;
+      item.sta.dat = ts;
+      item.sta.lee = 0;
+      item.sta.see = 0;
 
-      if(!item.trackers) {
-        var m = qr.parse(item.magnet);
-        if(!m.tr)
+      if(!item.tr)
           continue;
-
-        db.magnets.update({ infohash: item.infohash }, { $set: { trackers: m.tr }});
-        item.trackers = m.tr;
-      }
 
       this.list.push(item);
 
-      for(var j = 0; j < item.trackers.length; j++) {
-        var t = item.trackers[j];
+      for(var j = 0; j < item.tr.length; j++) {
+        var t = item.tr[j];
         var p;
         if(this.tr[t] || (p = url.parse(t)).protocol != 'udp:')
           continue;

@@ -13,7 +13,6 @@ exports.argv = function (n, a, o) {
     return;
   }
 
-  console.log(a);
   for(var i in o) {
     var e = a.indexOf(i);
     if(e == -1) {
