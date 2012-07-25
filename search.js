@@ -72,7 +72,6 @@ function search(rq, r, q, n) {
         return;
       }
 
-
       var s = null;
       function response() {
         if(s)
@@ -97,7 +96,7 @@ function search(rq, r, q, n) {
       if(n)
         response();
 
-      setTimeout(function () { response(); }, 4000);
+      setTimeout(function () { response(); }, 3000);
 
       trBox = new trackers.TrackerBox(list, function(err) {
         response();
