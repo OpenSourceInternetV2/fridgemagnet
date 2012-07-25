@@ -161,7 +161,7 @@ server = http.createServer(function(rq, r) {
 
     case 'note':
       var m = l[2];
-      db.magnets.update({ magnet: u.query },
+      db.magnets.update({ _id: u.query },
         (l[2] == '1') ? { $inc: { 'sta.pon': 1 }} :
                         { $inc: { 'sta.nen': 1 }});
       r.end('[]');

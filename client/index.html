@@ -139,9 +139,15 @@
                 </div>
                 <div class="expandable">
                     <span class="note"
-                        inherits="magnet=magnet,note=note,noted=noted,noteT=noteT,noteN=noteN">
-                          <a onclick="ui.noteClick(this, true)">&#9786;</a>
-                          <a onclick="ui.noteClick(this, false)">&#9785;</a>
+                        inherits="infohash=infohash,note=note,noted=noted,noteP=noteP,noteN=noteN">
+                          <a onclick="ui.noteClick(this, true)">
+                            &#9786;
+                            <span inherits="noteP"></span>
+                          </a>
+                          <a onclick="ui.noteClick(this, false)">
+                            &#9785;
+                            <span inherits="noteN"></span>
+                          </a>
                           <span style="color:orange;">&#9734;</span>
                           <span style="color:orange;">&#9734;</span>
                           <span style="color:orange;">&#9734;</span>

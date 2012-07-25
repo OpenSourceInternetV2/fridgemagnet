@@ -258,26 +258,28 @@ body:not([search]) #featured[featured] {
 
 .item .note a { text-decoration: none; }
 .item .note a:hover { color: rgb(0, 200, 0); }
+.item .note > a:first-child span { color: rgb(0, 200, 0); font-size: 10pt; }
 .item .note a + a:hover { color: rgb(255, 50, 50); }
+.item .note > a:first-child + a span { color: rgb(255, 50, 50); font-size: 10pt; }
 
 .item .note[noted] a { visibility: hidden; }
 
-.item .note span {
+.item .note > span {
   padding: 0px;
   letter-spacing: -0.2em;
 }
 
-.item .note:not([note]) span:nth-child(-n+7),
-.item .note[note="0"] span:nth-child(-n+7),
-.item .note[note="1"] span:nth-child(-n+6),
-.item .note[note="1"] span:nth-last-child(-n+1),
-.item .note[note="2"] span:nth-child(-n+5),
-.item .note[note="2"] span:nth-last-child(-n+2),
-.item .note[note="3"] span:nth-child(-n+4),
-.item .note[note="3"] span:nth-last-child(-n+3),
-.item .note[note="4"] span:nth-child(-n+3),
-.item .note[note="4"] span:nth-last-child(-n+4),
-.item .note[note="5"] span:nth-last-child(-n+5)
+.item .note:not([note]) > span:nth-child(-n+7),
+.item .note[note="0"] > span:nth-child(-n+7),
+.item .note[note="1"] > span:nth-child(-n+6),
+.item .note[note="1"] > span:nth-last-child(-n+1),
+.item .note[note="2"] > span:nth-child(-n+5),
+.item .note[note="2"] > span:nth-last-child(-n+2),
+.item .note[note="3"] > span:nth-child(-n+4),
+.item .note[note="3"] > span:nth-last-child(-n+3),
+.item .note[note="4"] > span:nth-child(-n+3),
+.item .note[note="4"] > span:nth-last-child(-n+4),
+.item .note[note="5"] > span:nth-last-child(-n+5)
 {
   display: none;
 }

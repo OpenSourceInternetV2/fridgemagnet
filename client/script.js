@@ -28,14 +28,21 @@ var ui = {
   // Methods:
   note: function (e, n) {
     //TODO: redo
-    if(n && n.note && n.count)
-      e.set('note', parseInt(n.note / n.count * 5))
-       .set('noteN', n.note)
-       .set('noteT', n.count);
+    if(n && n.pon) {
+      if(!n.nen)
+        n.nen = 0;
+
+      var note = parseInt(n.pon / (n.pon + n.nen) * 5);
+      if(n < 0) n = 0;
+
+      e.set('note', note)
+       .set('noteN', n.nen)
+       .set('noteP', n.pon);
+    }
     else
       e.set('note', 0)
        .set('noteN', 0)
-       .set('noteT', 0);
+       .set('noteP', 0);
   },
 
 
@@ -45,15 +52,15 @@ var ui = {
       return;
 
     e.parentNode.setAttribute('noted', '1');
-    server.note(e.parentNode.getAttribute('magnet'), n);
+    server.note(e.parentNode.getAttribute('infohash'), n);
 
     var s = {
-      count: parseInt(e.parentNode.getAttribute('noteT')) + 1,
-      note: parseInt(e.parentNode.getAttribute('noteN'))
+      pon: parseInt(e.parentNode.getAttribute('noteP')),
+      nen: parseInt(e.parentNode.getAttribute('noteN'))
     };
 
-    if(n)
-      s.note++;
+    if(n) s.pon++;
+    else  s.nen++;
 
     ui.note(e.parentNode.parentNode.parentNode, s);
   },
@@ -271,6 +278,7 @@ var server = {
 
         var sta = list[i].sta;
         var e = ui.item()
+            .set('infohash', list[i]._id)
             .set('magnet', magnetize(list[i]))
             .set('name', list[i].dn)
             .set('sources', r)

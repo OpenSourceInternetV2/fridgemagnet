@@ -21,9 +21,9 @@ Magnets:
   "tr":  "trackers",
   "kwd": "keywords",
   "src": "sources",
-  "siz": "size of the torrent"
+  "siz": "size of the torrent",
   "sta": {
-    "see":  "seeders"
+    "see":  "seeders",
     "lee":  "leechers",
     "dat":  "last update",
     "pon":  "positives notes",
