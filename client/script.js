@@ -27,6 +27,7 @@ var ui = {
 
   // Methods:
   note: function (e, n) {
+    //TODO: redo
     if(n && n.note && n.count)
       e.set('note', parseInt(n.note / n.count * 5))
        .set('noteN', n.note)
@@ -167,13 +168,13 @@ function xhrGet(url, onSuccess, onFail) {
 
 
 function percentEncode(q) {
-  return q.replace(' ', '%20').replace('!', '%21').replace('#', '%23')
-          .replace('$', '%24').replace('&', '%26').replace("'", '%27')
-          .replace('(', '%28').replace(')', '%29').replace('*', '%2A')
-          .replace('+', '%2B').replace(',', '%2C').replace('/', '%2F')
-          .replace(':', '%3A').replace(';', '%3B').replace('=', '%3D')
-          .replace('?', '%3F').replace('@', '%40').replace('[', '%5B')
-          .replace(']', '%5D');
+  return q.replace(/\s/g, '%20').replace(/\!/g, '%21').replace(/#/g, '%23')
+          .replace(/\$/g, '%24').replace(/&/g, '%26').replace(/'/g, '%27')
+          .replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/\*/g, '%2A')
+          .replace(/\+/g, '%2B').replace(/,/g, '%2C').replace(/\//g, '%2F')
+          .replace(/\:/g, '%3A').replace(/;/g, '%3B').replace(/=/g, '%3D')
+          .replace(/\?/g, '%3F').replace(/@/g, '%40').replace(/\[/g, '%5B')
+          .replace(/\]/g, '%5D');
 }
 
 function percentDecode(q) {
@@ -196,6 +197,24 @@ function humanSize (s) {
   if(s > 1000)
     return (parseInt(s/100)/10) + 'Kb';
   return s + ' bytes';
+}
+
+
+function magnetize (e) {
+  var m = 'magnet:?xt=' + e._id;
+
+  if(e.tr) {
+    if(e.tr.splice)
+      for(var i = 0; i < e.tr.length; i++)
+        m += '&tr=' + percentEncode(e.tr[i]);
+    else
+      m += '&tr=' + percentEncode(e.tr);
+  }
+
+  if(e.dn)
+    m += '&dn=' + percentEncode(e.dn);
+
+  return m;
 }
 
 //------------------------------------------------------------------------------
@@ -238,30 +257,30 @@ var server = {
       }
 
       list.sort(function (a, b) {
-        return (((a.stats && a.stats.seeders) || 0) < ((b.stats && b.stats.seeders) || 0));
+        return (((a.sta && a.sta.see) || 0) < ((b.sta && b.sta.see) || 0));
       });
 
       var fr = document.createDocumentFragment();
       for(var i = 0; i < list.length; i++) {
-        var s = list[i].sources;
+        var s = list[i].src;
         var r = '';
 
         if(s)
           for(var j = 0; j < s.length; j++)
             r += '<a href="' + s[j] + '">' + s[j] + '</a>';
 
-        var stats = list[i].stats;
+        var sta = list[i].sta;
         var e = ui.item()
-            .set('magnet', list[i].magnet)
-            .set('name', list[i].name)
+            .set('magnet', magnetize(list[i]))
+            .set('name', list[i].dn)
             .set('sources', r)
-            .set('seeders', (stats && stats.seeders) || 0)
-            .set('leechers',  (stats && stats.leechers) || 0)
+            .set('seeders', (sta && sta.see) || 0)
+            .set('leechers',  (sta && sta.lee) || 0)
 
-        if(list[i].size)
-          e.set('size', humanSize(list[i].size));
+        if(list[i].siz)
+          e.set('size', humanSize(list[i].siz));
 
-        ui.note(e, stats);
+        ui.note(e, sta);
 
         fr.appendChild(e);
       }

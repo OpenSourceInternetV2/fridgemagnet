@@ -20,7 +20,6 @@ var http = require('http');
 var https = require('https');
 var url = require('url');
 var qr = require('querystring');
-var path = require('path');
 var zlib = require('zlib');
 
 var db = require('./common/db.js');
@@ -40,9 +39,6 @@ function Request (u, cb) {
   this.o = url.parse(u);
   this.c = cb;
 
-
-  var ext = path.extname(u);
-
   var that = this;
   var rq = ((this.o.protocol == 'https:') ? https : http).get(this.o, function (r) {
     if(r.statusCode && r.statusCode != 200) {
@@ -59,10 +55,9 @@ function Request (u, cb) {
     }
 
 
-    if(r.headers['content-type'] == 'application/x-bittorrent') {
+    if(r.headers['content-type'] == 'application/x-bittorrent')
       that.analyze = that.analyze_;
-    }
-    else if(ext != '.torrent' && (!r.headers['content-type'] || r.headers['content-type'].search(/html/i) == -1)) {
+    else if(!r.headers['content-type'] || r.headers['content-type'].search(/html/i) == -1) {
       rq.end();
       that.destroy(true);
       return;
@@ -125,7 +120,6 @@ Request.prototype = {
       manager.magnets(this, l);
     }
 
-    this.body.replace(/https/, 'http');
     l = this.body.match(links);
     if(!l) {
       this.destroy();
@@ -133,7 +127,7 @@ Request.prototype = {
     }
 
 
-    var h = 'http://' + this.o.hostname;
+    var h = this.o.protocol + '//' + this.o.hostname;
     var p = this.o.path;
     p = p.substr(0, p.lastIndexOf('/'));
 
@@ -170,19 +164,15 @@ Request.prototype = {
   analyze_: function () {
     try {
       utils.log('T ' + this.u);
-      var o = {
-        $addToSet: { sources: this.u }
-      }
+      var o = { $addToSet: { src: this.u } }
       o.$set = torrent.decode(this.body);
 
-      if(!o.$set || !o.$set.name) {
+      if(!o.$set || !o.$set.dn) {
         this.destroy(true);
         return;
       }
 
-      o.$set.keywords = o.$set.name.toLowerCase().match(/(\w)+/gi);
-
-      db.magnets.update({ infohash: o.infoHash }, o, { upsert: true});
+      db.magnets.update({ _id: o.$set.xt }, o, { upsert: true});
       this.destroy();
     }
     catch(e) {

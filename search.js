@@ -51,18 +51,19 @@ function search(rq, r, q, n) {
     else
       incl.push(q[i]);
 
-  q = { keywords: { $all: incl }};
+  q = { kwd: {} };
+  if(incl.length)
+    q.kwd.$all = incl;
   if(excl.length)
-    q.keywords.$nin = excl;
+    q.kwd.$nin = excl;
 
   // db request
   db.magnets.find(q, {
-      _id: 0,
-      keywords: 0,
+      kwd: 0,
     }, {
       limit: cfg.maxResults,
     })
-    .sort({ 'stats.seeders': -1 })
+    .sort({ 'sta.see': -1 })
     .toArray(function (err, list) {
       if(err || !list.length) {
         r.end('[]');
@@ -161,7 +162,8 @@ server = http.createServer(function(rq, r) {
     case 'note':
       var m = l[2];
       db.magnets.update({ magnet: u.query },
-        { $inc: { 'stats.note': (l[2] == '1' ? 1 : 0), 'stats.count': 1 }});
+        (l[2] == '1') ? { $inc: { 'sta.pon': 1 }} :
+                        { $inc: { 'sta.nen': 1 }});
       r.end('[]');
 
       break;
@@ -176,6 +178,7 @@ server = http.createServer(function(rq, r) {
 //------------------------------------------------------------------------------
 db.init(function () {
   updateStats();
+  console.log('start listening on', cfg.host, cfg.port);
   server.listen(cfg.port, cfg.host);
 },
 function (n, e) {
