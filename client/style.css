@@ -257,8 +257,8 @@ body:not([search]) #featured[featured] {
 }
 
 .item .note a { text-decoration: none; }
-.item .note a:hover { color: rgb(255, 50, 50); }
-.item .note a + a:hover { color: rgb(0, 200, 0); }
+.item .note a:hover { color: rgb(0, 200, 0); }
+.item .note a + a:hover { color: rgb(255, 50, 50); }
 
 .item .note[noted] a { visibility: hidden; }
 
