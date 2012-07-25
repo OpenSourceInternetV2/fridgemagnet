@@ -40,9 +40,6 @@ transaction_id = parseInt(Math.random()*100000000);
 /* Search
  */
 function search(rq, r, q, n) {
-  var mt = parseInt(Date.now()/1000) - 2100;
-  var ts = parseInt(Date.now()/1000);
-
   //request parseing
   q = q.toLowerCase().match(/-?(\w)+/gi);
   var incl = [],
