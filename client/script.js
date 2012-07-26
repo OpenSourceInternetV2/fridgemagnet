@@ -26,6 +26,13 @@ var ui = {
 
 
   // Methods:
+  showPub: function (v) {
+    if(config('enable.sponsors') == 'true')
+      $('sponsors-content').innerHTML = '<iframe src="sponsors.html"></iframe>';
+    else
+      $('sponsors-content').innerHTML = '<div>You have choosen to disable advertizing, we respect it, but don\'t forget it helps us to maintain this website</div>';
+  },
+
   note: function (e, n) {
     //TODO: redo
     if(n && n.pon) {
@@ -316,6 +323,8 @@ var server = {
     $('list').innerHTML = '';
     $('n-results').innerHTML = '';
     this.search_(query.query);
+
+    ui.showPub();
   },
 
 
@@ -354,11 +363,16 @@ function init() {
     server.search(percentDecode(location.search.substr(3)), true);
 
   // other init
-  config.init({ 'save.history': 'true' }, {
+  config.init({ 'save.history': 'true', 'enable.ad': 'true' }, {
     'save.history': {
       id: 'cfg-history',
       prop: 'checked',
-      cb: function (e) { if(!e.target.checked) historic.clear(); } }
+      cb: function (e, v) { if(!v || (e && !e.target.checked)) historic.clear(); } },
+    'enable.sponsors': {
+      id: 'cfg-sponsors',
+      prop: 'checked',
+      cb: function (e, v) { ui.showPub(); }
+    },
   });
   historic.init();
 }

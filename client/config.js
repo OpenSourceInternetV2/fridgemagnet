@@ -83,8 +83,11 @@ config.watch = function (key, id, prop, cb) {
   this.watchers[key] = { o: o, p: prop};
 
   var e = config(key);
-  if(e)
+  if(e) {
     o[prop] = (prop == 'checked') ? (e == 'true') : e;
+    if(cb)
+      cb(null, o[prop]);
+  }
 }
 
 
