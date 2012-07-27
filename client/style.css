@@ -281,11 +281,14 @@ body:not([search]) #featured[featured] {
 }
 
 
+.item .note {
+  font-size: 13pt;
+}
+
 .item .note,
 .item .size {
   margin-right: 1em;
   color: grey;
-  font-size: 13pt;
 }
 
 .item .note a { text-decoration: none; }
