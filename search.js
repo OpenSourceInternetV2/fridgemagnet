@@ -41,7 +41,7 @@ transaction_id = parseInt(Math.random()*100000000);
  */
 function search(rq, r, q, n) {
   //request parseing
-  q = q.toLowerCase().match(/-?(\w)+/gi);
+  q = q.toLowerCase().match(/-?\w\w\w*/gi);
   var incl = [],
       excl = [];
 
@@ -152,7 +152,7 @@ server = http.createServer(function(rq, r) {
       if(q.q.substr(0, 19) == 'magnet:?xt=urn:btih') {
         var m = q.q.toLowerCase().match(/magnet:?\S+/);
         if(m)
-          db.addMagnets(m);
+          db.addMagnets(null, m);
         //TODO: return it
       }
 

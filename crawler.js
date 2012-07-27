@@ -173,6 +173,8 @@ Request.prototype = {
       }
 
       db.magnets.update({ _id: o.$set.xt }, o, { upsert: true});
+
+      this.score = 1;
       this.destroy();
     }
     catch(e) {
