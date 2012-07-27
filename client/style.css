@@ -57,7 +57,7 @@ a:hover {
 .popup > div,
 .left > div {
   padding: 1em;
-  background-color: rgba(255, 255, 255, 0.95);
+  background-color: rgba(255, 255, 255, 0.9);
   border: 1px rgb(140, 200, 200) solid;
   box-shadow: 5px 5px 15px -10px black;
 }
@@ -393,11 +393,11 @@ body[search="1"] #loading {
   margin-left: 1em;
   padding-left: 1.4em;
   padding-top: 0em;
+  font-size: 10pt;
 }
 
 
 .history-item {
-  font-size: 10pt;
   margin-bottom: 0.6em;
 }
 

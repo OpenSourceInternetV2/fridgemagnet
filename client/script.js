@@ -181,28 +181,6 @@ function xhrGet(url, onSuccess, onFail) {
 }
 
 
-function percentEncode(q) {
-  return q.replace(/\s/g, '%20').replace(/\!/g, '%21').replace(/#/g, '%23')
-          .replace(/\$/g, '%24').replace(/&/g, '%26').replace(/'/g, '%27')
-          .replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/\*/g, '%2A')
-          .replace(/\+/g, '%2B').replace(/,/g, '%2C').replace(/\//g, '%2F')
-          .replace(/\:/g, '%3A').replace(/;/g, '%3B').replace(/=/g, '%3D')
-          .replace(/\?/g, '%3F').replace(/@/g, '%40').replace(/\[/g, '%5B')
-          .replace(/\]/g, '%5D');
-}
-
-function percentDecode(q) {
-  return q.replace(/%20/g, ' ').replace(/%21/g, '!').replace(/%23/g, '#')
-          .replace(/%24/g, '$').replace(/%26/g, '&').replace(/%27/g, "'")
-          .replace(/%28/g, '(').replace(/%29/g, ')').replace(/%2A/g, '*')
-          .replace(/%2B/g, '+').replace(/%2C/g, ',').replace(/%2F/g, '/')
-          .replace(/%3A/g, ':').replace(/%3B/g, ';').replace(/%3D/g, '=')
-          .replace(/%3F/g, '?').replace(/%40/g, '@').replace(/%5B/g, '[')
-          .replace(/%5D/g, ']');
-
-}
-
-
 function humanSize (s) {
   if(s > 1000000000)
     return (parseInt(s/100000000)/10) + 'Gb';
@@ -220,13 +198,13 @@ function magnetize (e) {
   if(e.tr) {
     if(e.tr.splice)
       for(var i = 0; i < e.tr.length; i++)
-        m += '&tr=' + percentEncode(e.tr[i]);
+        m += '&tr=' + encodeURIComponent(e.tr[i]);
     else
-      m += '&tr=' + percentEncode(e.tr);
+      m += '&tr=' + encodeURIComponent(e.tr);
   }
 
   if(e.dn)
-    m += '&dn=' + percentEncode(e.dn);
+    m += '&dn=' + encodeURIComponent(e.dn);
 
   return m;
 }
@@ -311,7 +289,7 @@ var server = {
 
   search: function (s, r) {
     query.search = s;
-    query.query = 'q=' + percentEncode(s);
+    query.query = 'q=' + encodeURIComponent(s);
 
     if(!r) {
       var stateObj = {};
@@ -360,7 +338,7 @@ function init() {
   });
 
   if(location.search && location.search.length > 1)
-    server.search(percentDecode(location.search.substr(3)), true);
+    server.search(decodeURIComponent(location.search.substr(3)), true);
 
   // other init
   config.init({ 'save.history': 'true', 'enable.sponsors': 'true' }, {

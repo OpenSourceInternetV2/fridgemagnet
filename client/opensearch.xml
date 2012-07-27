@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
 <ShortName>lefrigo</ShortName>
-<Description>Search magnets on lefrigo</Description>
+<Description>Search torrent magnets on lefrigo</Description>
 <InputEncoding>UTF-8</InputEncoding>
-<Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAMCAYAAABr5z2BAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAANfAAADXwEZMEnZAAAAB3RJTUUH3AcbDisnRfQfcgAAAkdJREFUKM+VkkFIU3EAxr/93557821jm9nWmBhlljSIiQ0CNQQ7rMMOIYHGppciUGIICiU1pQwCTSqSKIqCIL1EEVpCOIcHX8zQDYVyICJto3Lu5XPb2xzv3yUv1cXv/P2+7/B9eO9yAQA6R0Z0wWCwZXJykqeUYk96Wl19aK67+1k8Hp+NRCJ398KqXjQ38269fp1kMuZkf//XV6FQraOyMtvW1oZOAA//GKeBAxaet6gNBlVCo/netLaWAAB1bUXFBZ4Q869CYT1YX++6rSjZ3fRdOAw830/IWa6kpJzhOOwzmcR5q/VBnSDcIGaLpUul1SKlVj+5oihbADAwMAAA6GltNUQI+WIE2kWNpjyt1YpFnQ6swWA8arVeX/B4mtQsw1SrAOQVRdptDgQCAKXwRqOfck7nQam3t7AKnCujdLGEUscJrfYdbzSyZRx3kxS3t38ouRyslF5+43DYAOARx9lfm0xhjSxX2bxe+qGvr9mXy01MFArxM0tLUz9Z9h4pLYXGaDxJxGTyDpUk6GX5mJNhFqN2e8TJMAtHRLEObjfmx8Yabw0Ozn4eH8doKgUAyFIao4RAYZiUarCmhmu32aZ1knRKJYqQ02lk02nsFIvfZoDzl4C5v6db 83hmym2200mGuc9Mb2wUIcsvrYoiZCVpeyuTERL5/NUocO0isPoWwBgAv98PQRDwcWho9PDycgtY dmdlc9MHAGjk+X8O4vvPacLhcFcimYyvdHREwg0NPdirQqHQ8VgsFng8PFwFAHRqCr8BHzLshuRB 5PYAAAAASUVORK5CYII=</Image>
-<Url type="text/html" method="GET"
-  template="http://lefrigo.org/?q={searchTerms}"/>
+<Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBI WXMAAANfAAADXwEZMEnZAAAAB3RJTUUH3AcbDwsH6txxLwAAAhpJREFUOMvNk09o03AcxV9/SZum aUvWOZv+gyFaK3SHyeZpE4YV7JSeBBluOhBEcSgIg0HVy5xMmAwVRBCxHoR5GV4sFsRavGxmOOt6 mP+gc65hSjWaNKntTLyO4qW3fc/v8973C98HbJk5Nz3tzGazR9PpNNcMRwDgfji8Y3B19VY4HL4Q CATGmzGgH8ZiXNzlEkmh4JFWVt4/zuUu/U/4AvB5Oc5Lu92WEsOs9xWLJQCg94ZCxzlCPL9qtS/Z np591wxDa4RFILWdkH67zdZG2e3Y1tIiLwjC7a65uSvE4/WOWFgWZZq+d94wfm8GRwcG3HlClnng pMwwbT9ZVt5wOmF1u/ndgnB5MZHoI1aKClsA/DEMpTF5aGxsvjo52b4O1PLAkc+mGV0yzUNVlq0T nker3z9ONlT1m6HrEEzzzJNo1A8Ad+324CzPi0y1utM/NGQ+SyZjJ3T96WFJWjtYKGS+W603icMB hue7iSxJ101FgatajXRS1Nt3wWC+k6IWd8lyF+JxLMzM7L86MfFq82aaaX40CYFBUWXKbxhLEZo+ YFOUEKuqnF1VvTZVdVgM42tO1/sHM5n5xtOSkcgNB8e1/6jVHlgA4KLPxxxzOmMORUn8VZR6uVKZ LQKvTwFqI/x8aupOdzp9lghC/Y2m7WnqW0VRHClJ0tqH4eG82Ns7CgB0MwaapmUrqtr6sqPj0elU 6tPWKOE/hOvNXuk47WsAAAAASUVORK5CYII=</Image>
+<Url type="text/html" method="GET" template="http://lefrigo.org/?q={searchTerms}"/>
+<Url type="application/opensearchdescription+xml" rel="self"
+    template="http://lefrigo.org/opensearch.xml" />
 </OpenSearchDescription>
 
 
