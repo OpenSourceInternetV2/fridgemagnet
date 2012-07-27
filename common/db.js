@@ -103,7 +103,7 @@ exports.addMagnets = function (s, l) {
       _id: q.xt,
       dn: q.dn,
       tr: q.tr,
-      kwd: q.dn.toLowerCase().match(/(\w\w\w*)/gi),
+      kwd: q.dn.toLowerCase().match(/\w\w\w*/gi),
     });
   }
 
@@ -115,6 +115,9 @@ exports.addMagnets = function (s, l) {
    *          - update score
    */
   magnets.insert(k, function () {
+    if(!s)
+      return;
+
     magnets.update({ _id: { $in: o } }, { $addToSet: { src: s }}, function () {
       magnets.find({ _id: { $in: o } }, { _id: 1, src: 1 })
       .toArray(function (err, list) {
