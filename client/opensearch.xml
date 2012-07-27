@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+<ShortName>lefrigo</ShortName>
+<Description>Search magnets on lefrigo</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAMCAYAAABr5z2BAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAANfAAADXwEZMEnZAAAAB3RJTUUH3AcbDisnRfQfcgAAAkdJREFUKM+VkkFIU3EAxr/93557821jm9nWmBhlljSIiQ0CNQQ7rMMOIYHGppciUGIICiU1pQwCTSqSKIqCIL1EEVpCOIcHX8zQDYVyICJto3Lu5XPb2xzv3yUv1cXv/P2+7/B9eO9yAQA6R0Z0wWCwZXJykqeUYk96Wl19aK67+1k8Hp+NRCJ398KqXjQ38269fp1kMuZkf//XV6FQraOyMtvW1oZOAA//GKeBAxaet6gNBlVCo/netLaWAAB1bUXFBZ4Q869CYT1YX++6rSjZ3fRdOAw830/IWa6kpJzhOOwzmcR5q/VBnSDcIGaLpUul1SKlVj+5oihbADAwMAAA6GltNUQI+WIE2kWNpjyt1YpFnQ6swWA8arVeX/B4mtQsw1SrAOQVRdptDgQCAKXwRqOfck7nQam3t7AKnCujdLGEUscJrfYdbzSyZRx3kxS3t38ouRyslF5+43DYAOARx9lfm0xhjSxX2bxe+qGvr9mXy01MFArxM0tLUz9Z9h4pLYXGaDxJxGTyDpUk6GX5mJNhFqN2e8TJMAtHRLEObjfmx8Yabw0Ozn4eH8doKgUAyFIao4RAYZiUarCmhmu32aZ1knRKJYqQ02lk02nsFIvfZoDzl4C5v6db 83hmym2200mGuc9Mb2wUIcsvrYoiZCVpeyuTERL5/NUocO0isPoWwBgAv98PQRDwcWho9PDycgtY dmdlc9MHAGjk+X8O4vvPacLhcFcimYyvdHREwg0NPdirQqHQ8VgsFng8PFwFAHRqCr8BHzLshuRB 5PYAAAAASUVORK5CYII=</Image>
+<Url type="text/html" method="GET"
+  template="http://lefrigo.org/?q={searchTerms}"/>
+</OpenSearchDescription>
+
+
