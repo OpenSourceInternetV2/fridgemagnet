@@ -74,7 +74,7 @@ var ui = {
 
 
   searchKey: function (e) {
-    if(e.keyCode == 13)
+    if(e.keyCode == 13 && e.target.value.length)
       server.search(e.target.value);
   },
 
@@ -363,7 +363,7 @@ function init() {
     server.search(percentDecode(location.search.substr(3)), true);
 
   // other init
-  config.init({ 'save.history': 'true', 'enable.ad': 'true' }, {
+  config.init({ 'save.history': 'true', 'enable.sponsors': 'true' }, {
     'save.history': {
       id: 'cfg-history',
       prop: 'checked',
@@ -371,7 +371,7 @@ function init() {
     'enable.sponsors': {
       id: 'cfg-sponsors',
       prop: 'checked',
-      cb: function (e, v) { ui.showPub(); }
+      cb: function (e, v) { if(document.body.hasAttribute('search')) ui.showPub(); }
     },
   });
   historic.init();

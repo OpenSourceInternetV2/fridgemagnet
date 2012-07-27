@@ -260,10 +260,14 @@ db.init(function () {
   var a = process.argv;
   var o = utils.argv('fridgemagnet - crawler', a, {
     '-s': { d: 'crawl on url matching the regexp' },
+    '-t': { d: 'set a timeout before exit process (in seconds)' },
   })
 
   if(o['-s'])
     stayOnDomain = new RegExp(o['-s'], 'gi');
+
+  if(o['-t'])
+    setTimeout(function () { process.exit(0); }, parseInt(o['-t'])*1000);
 
   if(a.length) {
     var n = a.length;

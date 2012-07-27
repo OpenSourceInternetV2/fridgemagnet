@@ -58,8 +58,8 @@ config.init = function (defaults, watchers) {
    *  default.loadby
    *  plugins.*.enabled
    */
-  if(!localStorage.length)
-    for(var i in defaults)
+  for(var i in defaults)
+    if(!config(i))
       config(i, defaults[i]);
 
   if(watchers)
@@ -86,7 +86,7 @@ config.watch = function (key, id, prop, cb) {
   if(e) {
     o[prop] = (prop == 'checked') ? (e == 'true') : e;
     if(cb)
-      cb(null, o[prop]);
+      cb(null, e);
   }
 }
 

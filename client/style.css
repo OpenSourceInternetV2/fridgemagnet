@@ -226,7 +226,6 @@ body:not([search]) #featured[featured] {
 }
 
 .sponsors input {
-  float: left;
   position: absolute;
 }
 
