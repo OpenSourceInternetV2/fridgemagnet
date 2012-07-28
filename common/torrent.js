@@ -42,7 +42,7 @@ exports.decode = function (d) {
     _id: 'urn:btih:' + hash ,
     dn: name,
     tr : ann,
-    siz: size,
+    xl: size,
     kwd: name.toLowerCase().match(/(\w)+/gi)
   };
 }

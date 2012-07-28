@@ -90,21 +90,27 @@ exports.addMagnets = function (s, l) {
   var k = [];
 
   for(var i = 0; i < l.length; i++) {
-    var q = qr.parse(l[i].substring(8));
+    var q = qr.parse(l[i].substring(8).replace(/&amp;/gi, '&'));
 
     //FIXME for the moment:
-    if(!q.dn)
-      return;
+    if(!q.dn) {
+      console.log('no q.dn for', s, q);
+      continue;
+    }
 
     q.xt = q.xt.toLowerCase(); //yep, this exists
 
     o.push(q.xt);
-    k.push({
+    var m = {
       _id: q.xt,
       dn: q.dn,
       tr: q.tr,
       kwd: q.dn.toLowerCase().match(/\w\w\w*/gi),
-    });
+    };
+
+    if(q.xl)
+      m.xl = q.xl;
+    k.push(m);
   }
 
   /*  Algo: - add the magnets

@@ -270,8 +270,8 @@ var server = {
             .set('seeders', (sta && sta.see) || 0)
             .set('leechers',  (sta && sta.lee) || 0)
 
-        if(list[i].siz)
-          e.set('size', humanSize(list[i].siz));
+        if(list[i].xl)
+          e.set('size', humanSize(list[i].xl));
 
         ui.note(e, sta);
 
