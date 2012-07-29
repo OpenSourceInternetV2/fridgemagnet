@@ -74,8 +74,16 @@ var ui = {
 
 
   searchKey: function (e) {
-    if(e.keyCode == 13 && e.target.value.length)
-      server.search(e.target.value);
+    var v = $('search-input').value;
+    if(e.keyCode == 13 && v.length) {
+      if(v.search(/\s*magnet:\?/) == 0 && location.hash != '#magnet') {
+        location.hash = 'magnet';
+        $('src-input').focus();
+      }
+      else {
+        server.search(v);
+      }
+    }
   },
 
 
@@ -84,15 +92,8 @@ var ui = {
        window.scrollY + window.innerHeight > document.body.clientHeight + 60)
       server.next();*/
   },
-
-
-  torrentInput: function (e) {
-    var l = e.currentTarget.files;
-
-    for(var i = 0; i < l.length; i++)
-      torrentFile.magnetize(l[i]);
-  },
 }
+
 
 
 //------------------------------------------------------------------------------
@@ -127,6 +128,7 @@ var historic = {
     else {
       l = JSON.parse(l);
 
+      //TODO: move to top
       if(l.indexOf(q) != -1)
         return;
 
@@ -291,12 +293,21 @@ var server = {
     query.search = s;
     query.query = 'q=' + encodeURIComponent(s);
 
-    if(!r) {
+    var v = $('src-input').value;
+    if(!r && !v.length) {
       var stateObj = {};
       history.pushState(stateObj, s, '?' + query.query);
     }
+    else if(v.length) {
+      query.query += '&s=' + encodeURIComponent(v);
+      $('src-input').value = '';
+    }
+    else
+      historic.push(s);
 
-    historic.push(s);
+    if(location.hash)
+      location.hash = '';
+
     $('search-input').value = s;
     $('list').innerHTML = '';
     $('n-results').innerHTML = '';
@@ -327,6 +338,7 @@ function init() {
 
   // events:
   $('search-input').addEventListener('keyup', ui.searchKey, false);
+  $('src-input').addEventListener('keyup', ui.searchKey, false);
   //$('torrent-input').addEventListener('change', ui.torrentInput, false);
 
   document.addEventListener('scroll', ui.scroll, false);
@@ -337,6 +349,7 @@ function init() {
     $('stats').innerHTML = rq.m + ' magnets - ' + rq.s + ' pages / ' + rq.t;
   });
 
+  //TODO: redo
   if(location.search && location.search.length > 1)
     server.search(decodeURIComponent(location.search.substr(3)), true);
 

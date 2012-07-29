@@ -23,20 +23,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 var http = require('http');
-var dgram = require('dgram');
 var qr = require('querystring');
 var url = require('url');
 var zlib = require('zlib');
 
+var utils = require('./common/utils.js');
 var db = require('./common/db.js');
 var cfg = require('./common/config.js').search;
 var trackers = require('./common/trackers.js');
 
+const magnets = /magnet:[^\s"\]]+/gi;
+
 //------------------------------------------------------------------------------
-transaction_id = parseInt(Math.random()*100000000);
-
-
-
 /* Search
  */
 function search(rq, r, q, n) {
@@ -127,6 +125,44 @@ function updateStats() {
   setTimeout(updateStats, 600000);
 }
 
+
+
+
+//------------------------------------------------------------------------------
+function addMagnets (m, q) {
+  if(q.s)
+    try {
+      var o = url.parse(q.s);
+
+      if(!o)
+        return;
+
+      var r = utils.get(o, function(data, isTorrent) {
+          if(isTorrent) {
+            try {
+              data = torrent.decode(data);
+              if(data.xt)
+                db.addMagnets(o.href || q.s, m);
+            }
+            catch(e) {}
+            return;
+          }
+
+          data = data.toString();
+          var l = data.match(magnets);
+          if(l)
+            db.addMagnets(o.href || q.s, l.concat(m));
+        },
+        function () {
+        });
+    }
+    catch(e) { console.log(e); }
+  else
+    db.addMagnets(null, m);
+}
+
+
+
 //------------------------------------------------------------------------------
 server = http.createServer(function(rq, r) {
   //TODO: session number limits
@@ -149,11 +185,10 @@ server = http.createServer(function(rq, r) {
         return;
       }
 
-      if(q.q.substr(0, 19) == 'magnet:?xt=urn:btih') {
-        var m = q.q.toLowerCase().match(/magnet:?\S+/);
-        if(m)
-          db.addMagnets(null, m);
-        //TODO: return it
+      var m = q.q.match(/magnet:\?xt=\S+/gi);
+      if(m && m.length) {
+        addMagnets(m, q);
+        r.end('[]');
       }
 
       search(rq, r, q.q, q.nosl);

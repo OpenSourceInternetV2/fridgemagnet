@@ -70,6 +70,16 @@
 
 
         <!-- popups -->
+        <div id="magnet" class="popup">
+            <div class="box">
+                <p>It seems you entered a magnet. You can add a source below:</p>
+                <input type="text" id="src-input" placeholder="http://">
+                <p>You can ignore this message and press enter again.</p>
+                <div style="text-align:center"><a href="#">Close</a></div>
+            </div>
+        </div>
+
+
         <div id="about" class="popup">
             <div class="box">
                 <h1>What about? <small>(disclamer, terms of use blablabla)</small></h1>
@@ -173,6 +183,11 @@
 
             <div id="history-item" class="history-item">
                 <a inherits="query"></a>
+            </div>
+
+            <div id="upload-item" class="upload-item">
+                <span inherits="name"></span>
+                <span inherits="progress"></span>
             </div>
         </div>
     </body>
