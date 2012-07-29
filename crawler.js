@@ -39,65 +39,31 @@ function Request (u, cb) {
   this.o = url.parse(u);
   this.c = cb;
 
-  this.o.headers = {
-    'accept-encoding': 'gzip'
-  };
 
   var that = this;
-  var rq = ((this.o.protocol == 'https:') ? https : http).get(this.o, function (r) {
-    if(r.statusCode && r.statusCode != 200) {
-      if(r.statusCode >= 400)
-        that.destroy(true);
-      else (r.statusCode >= 300)
-        try {
-          manager.sources.push(r.headers.location);
-          utils.log('% ' + u + ' → ' + r.headers.location);
-          that.destroy(r.headers.location);
-        }
-        catch(e) {}
-      return;
-    }
+  this.r = utils.get(this.o, function (data, isTorrent) {
+      if(!data.length)
+        return that.destroy(true);
 
-
-    if(r.headers['content-type'] == 'application/x-bittorrent')
-      that.analyze = that.analyze_;
-    else if(!r.headers['content-type'] || r.headers['content-type'].search(/html/i) == -1) {
-      rq.end();
-      that.destroy(true);
-      return;
-    }
-
-    that.body = [];
-
-    var pipe = r;
-    if(r.headers['content-encoding'] == 'gzip') {
-      pipe = zlib.createGunzip();
-      r.pipe(pipe);
-    }
-
-    pipe.on('data', function (d) {
-      that.body.push(d);
-    })
-    .on('end', function () {
-      if(that.body.length) {
-        that.body = Buffer.concat(that.body);
-        that.analyze();
-      }
+      if(isTorrent)
+        that._analyze(data);
       else
-        that.destroy();
-    })
-    .on('error', function () {
+        that.analyze(data);
+      that.destroy();
+    },
+    function () {
+      that.destroy(true);
+    },
+    function (u) {
+      if(u)
+        manager.sources.push(u);
+      utils.log('% ' + u + ' → ' + u);
+      that.destroy(u);
     });
-  })
-  .on('error', function (e) {
-    that.destroy(true);
-  });
 
   /*rq.setTimeout(_.s2sTimeout, function() {
     that.destroy(true);
   });*/
-
-  this.r = rq;
 }
 
 
@@ -116,15 +82,15 @@ Request.prototype = {
   },
 
 
-  analyze: function () {
-    this.body = this.body.toString();
-    var l = this.body.match(magnets);
+  analyze: function (data) {
+    data = data.toString();
+    var l = data.match(magnets);
     if(l) {
       this.score = l.length;
       manager.magnets(this, l);
     }
 
-    l = this.body.match(links);
+    l = data.match(links);
     if(!l) {
       this.destroy();
       return;
@@ -165,11 +131,11 @@ Request.prototype = {
   },
 
 
-  analyze_: function () {
+  analyze_: function (data) {
     try {
       utils.log('T ' + this.u);
       var o = { $addToSet: { src: this.u } }
-      o.$set = torrent.decode(this.body);
+      o.$set = torrent.decode(data);
 
       if(!o.$set || !o.$set.dn) {
         this.destroy(true);

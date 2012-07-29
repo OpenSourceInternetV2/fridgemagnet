@@ -1,3 +1,7 @@
+var http = require('http');
+var https = require('https');
+var zlib = require('zlib');
+
 var _ = require('./config.js').main;
 
 
@@ -51,6 +55,63 @@ exports.host = function (host) {
 
   return host + '.' + ext.substr(0, ext.length-1);
 }
+
+
+exports.get = function (o, success, error, redir) {
+  if(!redir)
+    redir = error;
+
+  if(!o.headers)
+    o.headers = {};
+  o.headers['accept-encoding'] = 'gzip';
+
+  var isTorrent = false;
+  var rq = ((o.protocol == 'https:') ? https : http).get(o, function (r) {
+    if(r.statusCode && r.statusCode != 200) {
+      if(r.statusCode >= 400)
+        error(r.statusCode);
+      else (r.statusCode >= 300)
+        redir(r.headers.location);
+      return;
+    }
+
+    var ct = r.headers['content-type'];
+    if(ct && (ct == 'application/x-bittorrent'))
+      isTorrent = true;
+    else if(!ct || ct.search(/html/i) == -1) {
+      rq.end();
+      error();
+      return;
+    }
+
+
+    var body = [];
+    var pipe;
+    if(r.headers['content-encoding'] == 'gzip') {
+      pipe = zlib.createGunzip();
+      r.pipe(pipe);
+    }
+    else
+      pipe = r;
+
+    pipe
+      .on('data', function (d) { body.push(d); })
+      .on('end', function () {
+          if(body.length)
+            body = Buffer.concat(body);
+          success(body, isTorrent);
+      })
+      .on('error', function () {
+          error();
+      });
+  })
+  .on('error', function (e) {
+      error();
+  });
+
+  return rq;
+}
+
 
 
 exports.log = function () {};
