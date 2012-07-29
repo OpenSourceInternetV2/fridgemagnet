@@ -302,8 +302,8 @@ var server = {
       query.query += '&s=' + encodeURIComponent(v);
       $('src-input').value = '';
     }
-    else
-      historic.push(s);
+
+    historic.push(s);
 
     if(location.hash)
       location.hash = '';
