@@ -90,10 +90,14 @@ exports.addMagnets = function (s, l) {
   var k = [];
 
   for(var i = 0; i < l.length; i++) {
-    var q = qr.parse(l[i].substring(8).replace(/&amp;/gi, '&'));
+    var q;
+    if(l[i].substring)
+      q = qr.parse(l[i].substring(8).replace(/&amp;/gi, '&'));
+    else
+      q = l[i];
 
     //FIXME for the moment:
-    if(!q.dn) {
+    if(!q.dn || !q.xt) {
       console.log('no q.dn for', s, q);
       continue;
     }
@@ -124,7 +128,9 @@ exports.addMagnets = function (s, l) {
     if(!s)
       return;
 
-    magnets.update({ _id: { $in: o } }, { $addToSet: { src: s }}, function () {
+    magnets.update({ _id: { $in: o } }, { $addToSet: { src: s }}, { multi: true }, function (err) {
+      if(err)
+        console.log(err);
       magnets.find({ _id: { $in: o } }, { _id: 1, src: 1 })
       .toArray(function (err, list) {
         if(err || !list)
