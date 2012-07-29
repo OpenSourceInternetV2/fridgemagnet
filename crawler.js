@@ -39,6 +39,10 @@ function Request (u, cb) {
   this.o = url.parse(u);
   this.c = cb;
 
+  this.o.headers = {
+    'accept-encoding': 'gzip'
+  };
+
   var that = this;
   var rq = ((this.o.protocol == 'https:') ? https : http).get(this.o, function (r) {
     if(r.statusCode && r.statusCode != 200) {
