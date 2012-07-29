@@ -40,6 +40,11 @@ const magnets = /magnet:[^\s"\]]+/gi;
 function search(rq, r, q, n) {
   //request parseing
   q = q.toLowerCase().match(/-?\w\w\w*/gi);
+  if(!q) {
+    r.end('[]');
+    return;
+  }
+
   var incl = [],
       excl = [];
 
