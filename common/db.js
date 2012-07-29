@@ -129,8 +129,6 @@ exports.addMagnets = function (s, l) {
       return;
 
     magnets.update({ _id: { $in: o } }, { $addToSet: { src: s }}, { multi: true }, function (err) {
-      if(err)
-        console.log(err);
       magnets.find({ _id: { $in: o } }, { _id: 1, src: 1 })
       .toArray(function (err, list) {
         if(err || !list)
