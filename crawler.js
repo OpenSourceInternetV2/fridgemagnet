@@ -143,7 +143,7 @@ Request.prototype = {
         return;
       }
 
-      db.magnets.update({ _id: o.$set.xt }, o, { upsert: true});
+      db.magnets.update({ xt: o.$set.xt }, o, { upsert: true});
 
       this.score = 1;
       this.destroy();
@@ -165,59 +165,44 @@ manager = {
 
     if(up)
       o = {};
-    else if(stayOnDomain)
+
+    if(stayOnDomain)
       o.url = stayOnDomain;
 
-    db.sources.findOne(o, function (e, d) {
-      if(e || !d) {
-        if(e)
-          console.log(e);
-        else if(o.url)
-          console.log('no more for ', o.url);
-        manager.crawl(true);
-        return;
-      }
+    db.sources
+      .find(o, { limit: _.maxRequests })
+      .sort({ date: 1 })
+      .toArray(function (err, list) {
+        if(err || !list) {
+          manager.crawl(true);
+          return;
+        }
 
-      var u = url.parse(d.url);
-      o.url = RegExp('^https?://' + u.hostname);
-      db.sources
-        .find(o, { limit: _.maxRequests })
-        .sort({ date: 1 })
-        .toArray(function (err, list) {
-          var score = 0;
-          var n = list.length;
-          function cb (r, e) {
-            n--;
-            if(n) {
-              score += r.score || 0;
+        var n = list.length;
+        function cb (r, e) {
+          n--;
+          if(n)
+            return;
+
+          list = manager.sources.sort();
+          var l = [];
+          for(var i = 0; i < list.length; i++)
+            if(list[i+1] && list[i+1] != list[i])
+              l.push(list[i]);
+
+          db.addSources(l, function (e) {
+            if(e) {
+              console.log(e);
               return;
             }
+            manager.crawl();
+          });
+        } // -- cb
 
-            db.hosts.update(
-              { url: utils.host(r.o.hostname) },
-              { $inc: { score: score, count: list.length } },
-              { upsert: true }, function() {
-              list = manager.sources.sort();
-              var l = [];
-              for(var i = 0; i < list.length; i++)
-                if(list[i+1] && list[i+1] != list[i])
-                  l.push(list[i]);
-
-              db.addSources(l, function (e) {
-                if(e) {
-                  console.log(e);
-                  return;
-                }
-                manager.crawl();
-              });
-            });
-          } // -- cb
-
-          utils.log('> ' + list.length + ' @ ' +  u.hostname);
-          for(var i = 0; i < list.length; i++)
-            list[i] = new Request(list[i].url, cb);
-        });
-    });
+        utils.log('> ' + list.length);
+        for(var i = 0; i < list.length; i++)
+          list[i] = new Request(list[i].url, cb);
+      });
   },
 
 

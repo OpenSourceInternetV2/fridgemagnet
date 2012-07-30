@@ -29,7 +29,7 @@ var server = new mongo.Server(cfg.host, cfg.port, cfg.options);
 var db = new mongo.Db(cfg.db, server);
 
 
-var hosts;
+var terms;
 var magnets;
 var sources;
 
@@ -50,16 +50,15 @@ exports.init = function (cb, cberr) {
       }
 
       magnets = coll;
-      coll.ensureIndex({ 'kwd': 1 }, function () {});
+      coll.ensureIndex({ 'xt' : 1 }, { unique: true, dropDups: true }, function() {});
 
-      db.collection('hosts', function (err, coll) {
+      db.collection('terms', function (err, coll) {
         if(err) {
           cberr(2, err);
           return;
         }
 
-        hosts = coll;
-        coll.ensureIndex({ 'url' : 1 }, { unique: true, dropDups: true }, function() {});
+        terms = coll;
 
         db.collection('sources', function (err, coll) {
           if(err) {
@@ -71,7 +70,7 @@ exports.init = function (cb, cberr) {
           coll.ensureIndex({ 'url' : 1 }, { unique: true, dropDups: true }, function() {});
           coll.ensureIndex({ 'date' : 1 }, function () {});
 
-          d.hosts = hosts;
+          d.terms = terms;
           d.magnets = magnets;
           d.sources = sources;
           cb();
@@ -96,9 +95,8 @@ exports.addMagnets = function (s, l) {
     else
       q = l[i];
 
-    //FIXME for the moment:
     if(!q.dn || !q.xt) {
-      console.log('no q.dn for', s, q);
+      console.log('no q.dn or q.xt for', s, q);
       continue;
     }
 
@@ -106,16 +104,17 @@ exports.addMagnets = function (s, l) {
 
     o.push(q.xt);
     var m = {
-      _id: q.xt,
+      xt: q.xt,
       dn: q.dn,
       tr: q.tr,
-      kwd: q.dn.toLowerCase().match(/\w\w\w*/gi),
     };
 
     if(q.xl)
       m.xl = q.xl;
     k.push(m);
   }
+
+  var ts = {};
 
   /*  Algo: - add the magnets
    *        - update list of sources
@@ -128,17 +127,28 @@ exports.addMagnets = function (s, l) {
     if(!s)
       return;
 
-    magnets.update({ _id: { $in: o } }, { $addToSet: { src: s }}, { multi: true }, function (err) {
-      magnets.find({ _id: { $in: o } }, { _id: 1, src: 1 })
+    magnets.update({ xt: { $in: o } }, { $addToSet: { src: s }}, { multi: true }, function (err) {
+      magnets.find({ xt: { $in: o } }, { _id: 1, xt: 1, src: 1, dn: 1 })
       .toArray(function (err, list) {
         if(err || !list)
           return;
 
         var score = 0;
-        for(var i = 0; i < list.length; i++)
+        for(var i = 0; i < list.length; i++) {
           if(list[i].src && list[i].src.length == 1)
             score++;
+
+          var k = list[i].dn.toLowerCase().match(/\w\w\w*/gi);
+          for(var j = 0; j < k.length; j++)
+            if(ts[k[j]])
+              ts[k[j]].push(list[i]._id);
+            else
+              ts[k[j]] = [ list[i]._id ];
+        }
         sources.update({ url: s }, { $inc: { score: score, count: 1 }});
+
+        for(var i in ts)
+          terms.update({ _id: i }, { $addToSet: { m: { $each: ts[i] }}}, { upsert: true });
       });
     });
   });
@@ -149,48 +159,15 @@ exports.addMagnets = function (s, l) {
  *  Add a source to db, and call cb(err)
  */
 exports.addSources = function (l, cb) {
-  var hs = {};
+  do {
+    var k = l.splice(0, 50);
 
-  for(var i = 0; i < l.length; i++) {
-    var h = url.parse(l[i]);
-    if(!h.hostname)
-      continue;
+    for(var i = 0; i < k.length; i++)
+      k[i] = { 'url': k[i] };
 
-    h = utils.host(h.hostname);
-    if(!h || h.search(_.banish) != -1)
-      continue;
-
-    if(hs[h])
-      hs[h].push({ url: l[i] });
-    else
-      hs[h] = [{ url: l[i] }];
-  }
-
-  hosts.find({ url: { $in: Object.keys(hs) }})
-    .toArray(function (err, list) {
-      if(!err)
-        for(var i = 0; i < list.length; i++) {
-          var host = list[i];
-          if(host.count < _.quotaCount || (host.score / host.count) >= _.quotaR)
-            continue;
-
-          var r = RegExp('^https?://([^\/]+\.)?' + host.url.replace(/\./, '\\.') + '/.*', 'gi');
-          utils.log('- ' + r.toString());
-
-          sources.remove({ url: r });
-
-          delete hs[host.url];
-        }
-
-      list = [];
-      for(var i in hs)
-        list = list.concat(hs[i]);
-
-      do {
-        sources.insert(list.splice(0, 50));
-      } while(list.length);
-      cb();
-    });
+    sources.insert(k);
+  } while(l.length);
+  cb();
 }
 
 

@@ -195,7 +195,7 @@ function humanSize (s) {
 
 
 function magnetize (e) {
-  var m = 'magnet:?xt=' + e._id;
+  var m = 'magnet:?xt=' + e.xt;
 
   if(e.tr) {
     if(e.tr.splice)
@@ -265,7 +265,7 @@ var server = {
 
         var sta = list[i].sta;
         var e = ui.item()
-            .set('infohash', list[i]._id)
+            .set('infohash', list[i].xt)
             .set('magnet', magnetize(list[i]))
             .set('name', list[i].dn)
             .set('sources', r)

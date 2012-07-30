@@ -56,16 +56,53 @@ function search(rq, r, q, n) {
 
   q = { kwd: {} };
   if(incl.length)
-    q.kwd.$all = incl;
-  if(excl.length)
-    q.kwd.$nin = excl;
+    q._id.$in = incl;
+/*  if(excl.length)
+    q.kwd.$nin = excl;*/
 
-  // db request
-  db.magnets.find(q, {
-      kwd: 0,
-    }, {
-      limit: cfg.maxResults,
-    })
+  db.terms.find(q, { m: 1 }, { limit: 9 })
+  .toArray(function (err, list) {
+    if(err || !list.length || list.length != incl.length) {
+      r.end('[]');
+      return;
+    }
+
+    var id = 0;
+    var min = list[0].m.length;
+    for(var i = 1; i < list.length; i++)
+      if(list[i].m.length > min) {
+        id = i;
+        min = list[i].m.length;
+      }
+
+    var res = [];
+    var ms = list[id].m;
+    for(var i = 1; i < ms.length; i++) {
+      var d = ms[i];
+      var f = true;
+      for(var j = 0; !f && j < list.length; j++) {
+        if(j == id)
+          continue;
+        if(list[j].m.indexOf(ms[i]) == -1) {
+          f = false;
+          break;
+        }
+      }
+
+      if(f)
+        res.push(d);
+    }
+
+    //free resources
+    delete list;
+    delete ms;
+
+    if(!res.length) {
+      r.end('[]');
+      return;
+    }
+
+    db.magnets.find({ _id: { $in: res }}, { limit: cfg.maxResults })
     .sort({ 'sta.see': -1 })
     .toArray(function (err, list) {
       if(err || !list.length) {
@@ -103,6 +140,7 @@ function search(rq, r, q, n) {
         response();
       });
     });
+  });
 }
 
 
@@ -201,7 +239,7 @@ server = http.createServer(function(rq, r) {
 
     case 'note':
       var m = l[2];
-      db.magnets.update({ _id: u.query },
+      db.magnets.update({ xt: u.query },
         (l[2] == '1') ? { $inc: { 'sta.pon': 1 }} :
                         { $inc: { 'sta.nen': 1 }});
       r.end('[]');
