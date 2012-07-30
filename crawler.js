@@ -54,10 +54,11 @@ function Request (u, cb) {
     function () {
       that.destroy(true);
     },
-    function (u) {
-      if(u)
-        manager.sources.push(u);
-      utils.log('% ' + u + ' → ' + u);
+    function (url) {
+      if(url) {
+        manager.sources.push(url);
+        utils.log('% ' + u + ' → ' + url);
+      }
       that.destroy(u);
     });
 
