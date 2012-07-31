@@ -139,11 +139,22 @@ exports.addMagnets = function (s, l) {
             score++;
 
           var k = list[i].dn.toLowerCase().match(/\w\w\w*/gi);
+          if(!k)
+            continue;
           for(var j = 0; j < k.length; j++)
-            if(ts[k[j]])
-              ts[k[j]].push(list[i]._id);
-            else
-              ts[k[j]] = [ list[i]._id ];
+            try {
+              if(ts[k[j]])
+                ts[k[j]].push(list[i]._id);
+              else
+                ts[k[j]] = [ list[i]._id ];
+            }
+            catch(e) {
+              console.log(e);
+              console.log(k[j]);
+              console.log(ts);
+              continue;
+              process.exit(1);
+            }
         }
         sources.update({ url: s }, { $inc: { score: score, count: 1 }});
 

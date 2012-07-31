@@ -104,7 +104,7 @@ TrackerUDP.prototype = {
       sta.see = m.readInt32BE(k);
       sta.lee = m.readInt32BE(k+8);
 
-      db.magnets.update({ _id: s[i]._id }, { $set: {
+      db.magnets.update({ xt: s[i].xt }, { $set: {
         'sta.dat': sta.dat,
         'sta.see': sta.see,
         'sta.lee': sta.lee
@@ -138,7 +138,7 @@ TrackerUDP.prototype = {
     var h = '';
     for(var i = 0; i < l.length && s.length < 25; i++)
       if(l[i].tr.indexOf(this.url) != -1) {
-        h += l[i]._id.substr(l[i]._id.lastIndexOf(':')+1);
+        h += l[i].xt.substr(l[i].xt.lastIndexOf(':')+1);
         s = s.concat(l.splice(i, 1));
         i--;
       }

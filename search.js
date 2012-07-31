@@ -54,9 +54,9 @@ function search(rq, r, q, n) {
     else
       incl.push(q[i]);
 
-  q = { kwd: {} };
+//  q = { kwd: {} };
   if(incl.length)
-    q._id.$in = incl;
+    q = { _id: { $in: incl}};
 /*  if(excl.length)
     q.kwd.$nin = excl;*/
 
