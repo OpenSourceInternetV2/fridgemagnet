@@ -144,9 +144,9 @@ exports.addMagnets = function (s, l) {
           for(var j = 0; j < k.length; j++)
             try {
               if(ts[k[j]])
-                ts[k[j]].push(list[i]._id);
+                ts[k[j]].push(list[i]._id.toHexString());
               else
-                ts[k[j]] = [ list[i]._id ];
+                ts[k[j]] = [ list[i]._id.toHexString() ];
             }
             catch(e) {
               console.log(e);

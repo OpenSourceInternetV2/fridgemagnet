@@ -39,7 +39,7 @@ exports.decode = function (d) {
 
   //return
   return {
-    _id: 'urn:btih:' + hash ,
+    xt: 'urn:btih:' + hash ,
     dn: name,
     tr : ann,
     xl: size,

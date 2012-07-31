@@ -46,7 +46,7 @@ function Request (u, cb) {
         return that.destroy(true);
 
       if(isTorrent)
-        that._analyze(data);
+        that.analyze_(data);
       else
         that.analyze(data);
       that.destroy();
@@ -135,15 +135,16 @@ Request.prototype = {
   analyze_: function (data) {
     try {
       utils.log('T ' + this.u);
-      var o = { $addToSet: { src: this.u } }
-      o.$set = torrent.decode(data);
+      var o = torrent.decode(data);
 
-      if(!o.$set || !o.$set.dn) {
+      if(!o || !o.dn) {
         this.destroy(true);
         return;
       }
 
-      db.magnets.update({ xt: o.$set.xt }, o, { upsert: true});
+      //db.magnets.update({ xt: o.$set.xt }, o, { upsert: true});
+
+      manager.magnets(this, [o]);
 
       this.score = 1;
       this.destroy();

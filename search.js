@@ -32,6 +32,8 @@ var db = require('./common/db.js');
 var cfg = require('./common/config.js').search;
 var trackers = require('./common/trackers.js');
 
+ObjectID = require('mongodb').ObjectID;
+
 const magnets = /magnet:[^\s"\]]+/gi;
 
 //------------------------------------------------------------------------------
@@ -70,27 +72,32 @@ function search(rq, r, q, n) {
     var id = 0;
     var min = list[0].m.length;
     for(var i = 1; i < list.length; i++)
-      if(list[i].m.length > min) {
+      if(list[i].m.length < min) {
         id = i;
         min = list[i].m.length;
       }
 
     var res = [];
     var ms = list[id].m;
+    /* for each doc
+     */
     for(var i = 1; i < ms.length; i++) {
       var d = ms[i];
       var f = true;
-      for(var j = 0; !f && j < list.length; j++) {
+      /*  for each term
+       */
+      for(var j = 0; j < list.length; j++) {
         if(j == id)
           continue;
-        if(list[j].m.indexOf(ms[i]) == -1) {
+
+        if(list[j].m.indexOf(d) == -1) {
           f = false;
           break;
         }
       }
 
       if(f)
-        res.push(d);
+        res.push(new ObjectID(d));
     }
 
     //free resources
