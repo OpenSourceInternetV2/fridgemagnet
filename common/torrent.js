@@ -39,7 +39,7 @@ exports.decode = function (d) {
 
   //return
   return {
-    xt: 'urn:btih:' + hash ,
+    xt: (hash.indexOf(':') != -1 ? hash : 'urn:btih:' + hash),
     dn: name,
     tr : ann,
     xl: size,

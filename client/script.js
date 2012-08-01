@@ -196,15 +196,6 @@ function humanSize (s) {
 
 function magnetize (e) {
   var m = 'magnet:?xt=' + e.xt;
-
-  if(e.tr) {
-    if(e.tr.splice)
-      for(var i = 0; i < e.tr.length; i++)
-        m += '&tr=' + encodeURIComponent(e.tr[i]);
-    else
-      m += '&tr=' + encodeURIComponent(e.tr);
-  }
-
   if(e.dn)
     m += '&dn=' + encodeURIComponent(e.dn);
 
@@ -255,30 +246,34 @@ var server = {
       });
 
       var fr = document.createDocumentFragment();
-      for(var i = 0; i < list.length; i++) {
-        var s = list[i].src;
-        var r = '';
+      for(var i = 0; i < list.length; i++)
+        try {
+          var s = list[i].src;
+          var r = '';
 
-        if(s)
-          for(var j = 0; j < s.length; j++)
-            r += '<a href="' + s[j] + '">' + s[j] + '</a>';
+          if(s)
+            for(var j = 0; j < s.length; j++)
+              r += '<a href="' + s[j] + '">' + s[j] + '</a>';
 
-        var sta = list[i].sta;
-        var e = ui.item()
-            .set('infohash', list[i].xt)
-            .set('magnet', magnetize(list[i]))
-            .set('name', list[i].dn)
-            .set('sources', r)
-            .set('seeders', (sta && sta.see) || 0)
-            .set('leechers',  (sta && sta.lee) || 0)
+          //bug to fix in db
+          list[i].xt = list[i].xt.replace(/^(urn:btih:){2}/gi, 'urn:btih:');
 
-        if(list[i].xl)
-          e.set('size', humanSize(list[i].xl));
+          var sta = list[i].sta;
+          var e = ui.item()
+              .set('infohash', list[i].xt)
+              .set('magnet', magnetize(list[i]))
+              .set('name', list[i].dn)
+              .set('sources', r)
+              .set('seeders', (sta && sta.see) || 0)
+              .set('leechers',  (sta && sta.lee) || 0)
 
-        ui.note(e, sta);
+          if(list[i].xl)
+            e.set('size', humanSize(list[i].xl));
 
-        fr.appendChild(e);
-      }
+          ui.note(e, sta);
+
+          fr.appendChild(e);
+        } catch(e) {}
 
       $('list').appendChild(fr);
       query.count = $('list').childNodes.length;
