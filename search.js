@@ -30,25 +30,81 @@ var zlib = require('zlib');
 var utils = require('./common/utils.js');
 var db = require('./common/db.js');
 var cfg = require('./common/config.js').search;
+var _ = require('./common/config.js').main;
 var trackers = require('./common/trackers.js');
 
 ObjectID = require('mongodb').ObjectID;
 
 const magnets = /magnet:[^\s"\]]+/gi;
 
+var cache = {};
+
+
+function noRes () {
+  r.end('[]');
+}
+
+/*  I know the name is not the best, but I found it sexy
+ */
+function seek (rq, r, list, dn) {
+  var s = null;
+  function response() {
+    if(s)
+      return;
+
+    s = JSON.stringify(list);
+    if(!cache[dn])
+      cache[dn] = { dat: Date.now(), res: list };
+
+    if(rq.headers['accept-encoding'] &&
+       rq.headers['accept-encoding'].search('gzip') != -1) {
+      zlib.gzip(s, function(e, d) {
+        if(e)
+          r.end(s);
+        else {
+          r.setHeader('content-encoding', 'gzip');
+          r.end(d);
+        }
+      });
+    }
+    else
+      r.end(s);
+  }
+
+  setTimeout(function () { response(); }, 3000);
+
+  trBox = new trackers.TrackerBox(list, function(err) {
+    response();
+  });
+}
+
+
+
 //------------------------------------------------------------------------------
 /* Search
  */
-function search(rq, r, q, n) {
-  //request parseing
+function search(rq, r, q) {
   q = q.toLowerCase().match(/-?\w\w\w*/gi);
   if(!q) {
     r.end('[]');
     return;
   }
 
-  var incl = [],
-      excl = [];
+  q.sort();
+
+  var dn = q.join();
+  if(cache[dn]) {
+    if(cache[dn].dat >= ( Date.now() - _.cacheExpire )) {
+      seek(rq, r, cache[dn].res, dn);
+      return;
+    }
+    else
+      delete cache[dn];
+  }
+
+//  var policy = {};
+  var o = [];
+/*  var incl[];
 
   for(var i = 0; i < q.length; i++)
     if(q[i][0] == '-')
@@ -57,14 +113,14 @@ function search(rq, r, q, n) {
       incl.push(q[i]);
 
 //  q = { kwd: {} };
-  if(incl.length)
-    q = { _id: { $in: incl}};
+  if(incl.length)*/
+    o = { _id: { $in: q}};
 /*  if(excl.length)
     q.kwd.$nin = excl;*/
 
-  db.terms.find(q, { m: 1 }, { limit: 9 })
+  db.terms.find(o, { m: 1 }, { limit: 9 })
   .toArray(function (err, list) {
-    if(err || !list.length || list.length != incl.length) {
+    if(err || !list.length || list.length != q.length) {
       r.end('[]');
       return;
     }
@@ -112,40 +168,9 @@ function search(rq, r, q, n) {
     db.magnets.find({ _id: { $in: res }}, { limit: cfg.maxResults })
     .sort({ 'sta.see': -1 })
     .toArray(function (err, list) {
-      if(err || !list.length) {
-        r.end('[]');
-        return;
-      }
-
-      var s = null;
-      function response() {
-        if(s)
-          return;
-
-        s = JSON.stringify(list);
-        if(rq.headers['accept-encoding'] &&
-           rq.headers['accept-encoding'].search('gzip') != -1) {
-          zlib.gzip(s, function(e, d) {
-            if(e)
-              r.end(s);
-            else {
-              r.setHeader('content-encoding', 'gzip');
-              r.end(d);
-            }
-          });
-        }
-        else
-          r.end(s);
-      }
-
-      if(n)
-        response();
-
-      setTimeout(function () { response(); }, 3000);
-
-      trBox = new trackers.TrackerBox(list, function(err) {
-        response();
-      });
+        if(err || !list.length)
+          return noRes();
+        seek(rq, r, list, dn);
     });
   });
 }
@@ -230,18 +255,21 @@ server = http.createServer(function(rq, r) {
     case 'search':
       var q = qr.parse(u.query);
 
-      if(!q.q) {
-        r.end('[]');
-        return;
-      }
+      if(!q.q)
+        return noRes();
 
-      var m = q.q.match(/magnet:\?xt=\S+/gi);
-      if(m && m.length) {
-        addMagnets(m, q);
-        r.end('[]');
-      }
+      try {
+        var m = q.q.match(/magnet:\?xt=\S+/gi);
+        if(m && m.length) {
+          addMagnets(m, q);
+          return noRes();
+        }
 
-      search(rq, r, q.q, q.nosl);
+        search(rq, r, q.q);
+      }
+      catch(e) {
+        return noRes();
+      }
       break;
 
     case 'note':
@@ -249,12 +277,9 @@ server = http.createServer(function(rq, r) {
       db.magnets.update({ xt: u.query },
         (l[2] == '1') ? { $inc: { 'sta.pon': 1 }} :
                         { $inc: { 'sta.nen': 1 }});
-      r.end('[]');
-
-      break;
 
     default:
-      r.end('[]');
+      return noRes();
   }
 });
 

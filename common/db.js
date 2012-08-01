@@ -51,6 +51,7 @@ exports.init = function (cb, cberr) {
 
       magnets = coll;
       coll.ensureIndex({ 'xt' : 1 }, { unique: true, dropDups: true }, function() {});
+      coll.ensureIndex({ 'sta.see' : 1 }, function() {});
 
       db.collection('terms', function (err, coll) {
         if(err) {

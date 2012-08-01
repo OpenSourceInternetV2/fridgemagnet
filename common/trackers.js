@@ -4,6 +4,7 @@ var url = require('url');
 
 var db = require('./db.js');  //initialized by the caller
 var cfg = require('./config.js').search;
+var _ = require('./config.js').main;
 
 
 var trackers = {}
@@ -163,13 +164,16 @@ function TrackerBox (list, cb) {
   this.list = [];
   this.tr = {};
 
-  var mt = parseInt(Date.now()/1000) - 2100;
-  var ts = parseInt(Date.now()/1000);
+  var mt = Date.now() - _.cacheExpire;
+  var ts = Date.now()/1000;
   var that = this;
 
   for(var i = 0; i < list.length; i++)
     try {
       var item = list[i];
+
+      if(item.src.length > _.maxNSrc)
+        item.src = item.src.splice(0, _.maxNSrc);
 
       if(!item.sta)
         item.sta = {};
@@ -189,6 +193,10 @@ function TrackerBox (list, cb) {
       for(var j = 0; j < item.tr.length; j++) {
         var t = item.tr[j];
         var p;
+
+        if(t.toString)
+          t = t.toString();
+
         if(this.tr[t] || (p = url.parse(t)).protocol != 'udp:')
           continue;
 
