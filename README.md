@@ -13,15 +13,14 @@ this project requires mongodb to run. Configure the scripts using common/config.
 database
 ========
 
-Magnets:
+magnets:
 ```json
 {
   "xt":  "info hash",
   "dn":  "name",
   "tr":  "trackers",
-  "kwd": "keywords",
+  "xl": "size of the torrent",
   "src": "sources",
-  "siz": "size of the torrent",
   "sta": {
     "see":  "seeders",
     "lee":  "leechers",
@@ -32,6 +31,20 @@ Magnets:
 }
 ```
 
+terms:
+```json
+{
+  "_id": "term",
+  "m": "Array of magnet id"
+}
+```
 
 
+Todo
+====
+* detect common terms
+* less bugs and better UI
+* review cache management
+* crawl using page scores
+* ...
 
