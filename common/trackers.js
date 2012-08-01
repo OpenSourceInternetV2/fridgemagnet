@@ -165,7 +165,7 @@ function TrackerBox (list, cb) {
   this.tr = {};
 
   var mt = Date.now() - _.cacheExpire;
-  var ts = Date.now()/1000;
+  var ts = Date.now();
   var that = this;
 
   for(var i = 0; i < list.length; i++)
