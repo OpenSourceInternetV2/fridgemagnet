@@ -40,7 +40,7 @@ const magnets = /magnet:[^\s"\]]+/gi;
 var cache = {};
 
 
-function noRes () {
+function noRes (r) {
   r.end('[]');
 }
 
@@ -52,10 +52,14 @@ function seek (rq, r, list, dn) {
     if(s)
       return;
 
-    s = JSON.stringify(list);
     if(!cache[dn])
       cache[dn] = { dat: Date.now(), res: list };
 
+    list = list.concat();
+    for(var i = 0; i < list.length; i++)
+      delete list[i].tr;
+
+    s = JSON.stringify(list);
     if(rq.headers['accept-encoding'] &&
        rq.headers['accept-encoding'].search('gzip') != -1) {
       zlib.gzip(s, function(e, d) {
@@ -169,7 +173,8 @@ function search(rq, r, q) {
     .sort({ 'sta.see': -1 })
     .toArray(function (err, list) {
         if(err || !list.length)
-          return noRes();
+          return noRes(r);
+
         seek(rq, r, list, dn);
     });
   });
@@ -197,6 +202,13 @@ function updateStats() {
       });
     });
   });
+
+
+  var mt = Date.now() - _.cacheExpire;
+  for(var i in cache)
+    if(cache[i].dat >= mt)
+      delete cache[i];
+
   setTimeout(updateStats, 600000);
 }
 
@@ -256,19 +268,19 @@ server = http.createServer(function(rq, r) {
       var q = qr.parse(u.query);
 
       if(!q.q)
-        return noRes();
+        return noRes(r);
 
       try {
         var m = q.q.match(/magnet:\?xt=\S+/gi);
         if(m && m.length) {
           addMagnets(m, q);
-          return noRes();
+          return noRes(r);
         }
 
         search(rq, r, q.q);
       }
       catch(e) {
-        return noRes();
+        return noRes(r);
       }
       break;
 
@@ -279,7 +291,7 @@ server = http.createServer(function(rq, r) {
                         { $inc: { 'sta.nen': 1 }});
 
     default:
-      return noRes();
+      return noRes(r);
   }
 });
 
