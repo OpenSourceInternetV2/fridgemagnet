@@ -199,6 +199,7 @@ function TrackerBox (list, cb) {
         trackers[i] = new TrackerUDP(_.trackers[i], i);
       trackers[i].push(this);
     }
+    this.tr = Object.keys(trackers).length;
 }
 
 
@@ -208,8 +209,8 @@ TrackerBox.prototype = {
     //  there is no more tracker, call cb
     //  → if there is no more elements in the list, call cb
     if(err) {
-      delete this.tr[tr.url];
-      if(Object.keys(this.tr).length)
+      --this.tr;
+      if(this.tr > 0)
         return;
     }
     else if(this.list.length)
