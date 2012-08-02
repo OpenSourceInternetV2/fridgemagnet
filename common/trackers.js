@@ -12,6 +12,7 @@ transactionID = parseInt(Math.random()*100000000);
 
 
 function TrackerUDP (port, host) {
+  console.log(port, host);
   this.port = port;
   this.host = host;
 
@@ -179,9 +180,6 @@ function TrackerBox (list, cb) {
       item.sta.dat = ts;
       item.sta.lee = 0;
       item.sta.see = 0;
-
-      if(!item.tr)
-          continue;
 
       this.list.push(item);
     }
