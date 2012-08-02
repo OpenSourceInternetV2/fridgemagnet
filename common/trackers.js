@@ -12,7 +12,6 @@ transactionID = parseInt(Math.random()*100000000);
 
 
 function TrackerUDP (port, host) {
-  console.log(port, host);
   this.port = port;
   this.host = host;
 
