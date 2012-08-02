@@ -11,10 +11,9 @@ var trackers = {}
 transactionID = parseInt(Math.random()*100000000);
 
 
-function TrackerUDP (port, host, url) {
+function TrackerUDP (port, host) {
   this.port = port;
   this.host = host;
-  this.url = url;
 
   this.boxes = [];
 
@@ -67,7 +66,7 @@ function TrackerUDP (port, host, url) {
 
 TrackerUDP.prototype = {
   close: function (err) {
-    delete trackers[this.url];
+    delete trackers[this.host];
 
     for(var i = 0; i < this.boxes.length; i++)
       this.boxes[i].cb(err, this);
@@ -134,15 +133,11 @@ TrackerUDP.prototype = {
       return;
     }
 
-    var s = [];
-    var l = box.list;
+    var s = box.list.splice(0, 25);
     var h = '';
-    for(var i = 0; i < l.length && s.length < 25; i++)
-      if(l[i].tr.indexOf(this.url) != -1) {
-        h += l[i].xt.substr(l[i].xt.lastIndexOf(':')+1);
-        s = s.concat(l.splice(i, 1));
-        i--;
-      }
+    var i = 0;
+    for(var i = 0; i < s.length; i++)
+        h += s[i].xt.substr(s[i].xt.lastIndexOf(':')+1);
 
     this.box = box;
     this.stack = s;
@@ -172,7 +167,7 @@ function TrackerBox (list, cb) {
     try {
       var item = list[i];
 
-      if(item.src.length > _.maxNSrc)
+      if(item.src && item.src.length > _.maxNSrc)
         item.src = item.src.splice(0, _.maxNSrc);
 
       if(!item.sta)
@@ -189,35 +184,21 @@ function TrackerBox (list, cb) {
           continue;
 
       this.list.push(item);
-
-      for(var j = 0; j < item.tr.length; j++) {
-        var t = item.tr[j];
-        var p;
-
-        if(t.toString)
-          t = t.toString();
-
-        if(this.tr[t] || (p = url.parse(t)).protocol != 'udp:')
-          continue;
-
-        if(!trackers[t])
-          trackers[t] = new TrackerUDP(p.port, p.hostname, t);
-
-        this.tr[t] = trackers[t];
-      }
     }
     catch(e) {
       console.log(e);
     }
 
-
-    if(!Object.keys(this.tr).length) {
+    if(!this.list.length) {
       cb(false);
       return;
     }
 
-    for(var i in this.tr)
-      this.tr[i].push(this);
+    for(var i in _.trackers) {
+      if(!trackers[i])
+        trackers[i] = new TrackerUDP(_.trackers[i], i);
+      trackers[i].push(this);
+    }
 }
 
 

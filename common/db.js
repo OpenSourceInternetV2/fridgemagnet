@@ -107,7 +107,7 @@ exports.addMagnets = function (s, l) {
     var m = {
       xt: q.xt,
       dn: q.dn,
-      tr: q.tr,
+      //tr: q.tr,
     };
 
     if(q.xl)

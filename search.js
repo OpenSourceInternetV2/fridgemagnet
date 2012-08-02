@@ -203,13 +203,14 @@ function updateStats() {
     });
   });
 
+  setTimeout(updateStats, 600000);
+
+  console.log(Date(), 'search stats: cache=' + Object.keys(cache).length + ', stats=', serverStats);
 
   var mt = Date.now() - _.cacheExpire;
   for(var i in cache)
     if(cache[i].dat >= mt)
       delete cache[i];
-
-  setTimeout(updateStats, 600000);
 }
 
 
@@ -289,7 +290,7 @@ server = http.createServer(function(rq, r) {
       db.magnets.update({ xt: u.query },
         (l[2] == '1') ? { $inc: { 'sta.pon': 1 }} :
                         { $inc: { 'sta.nen': 1 }});
-
+      //FIXME: not updated in cache
     default:
       return noRes(r);
   }
