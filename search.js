@@ -139,26 +139,30 @@ function search(rq, r, q) {
 
     var res = [];
     var ms = list[id].m;
-    /* for each doc
-     */
-    for(var i = 1; i < ms.length; i++) {
-      var d = ms[i];
-      var f = true;
-      /*  for each term
+
+    if(ms.length <= cfg.maxResults)
+      res = ms;
+    else
+      /* for each doc
        */
-      for(var j = 0; j < list.length; j++) {
-        if(j == id)
-          continue;
+      for(var i = 1; i < ms.length; i++) {
+        var d = ms[i];
+        var f = true;
+        /*  for each term
+         */
+        for(var j = 0; j < list.length; j++) {
+          if(j == id)
+            continue;
 
-        if(list[j].m.indexOf(d) == -1) {
-          f = false;
-          break;
+          if(list[j].m.indexOf(d) == -1) {
+            f = false;
+            break;
+          }
         }
-      }
 
-      if(f)
-        res.push(new ObjectID(d));
-    }
+        if(f)
+          res.push(new ObjectID(d));
+      }
 
     //free resources
     delete list;
