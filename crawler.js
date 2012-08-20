@@ -56,6 +56,8 @@ function Request (u, cb) {
     },
     function (url) {
       if(url) {
+        if(url[0] == '/')
+          url = that.o.protocol + '//' + that.o.host + url;
         manager.sources.push(url);
         utils.log('% ' + u + ' → ' + url);
       }

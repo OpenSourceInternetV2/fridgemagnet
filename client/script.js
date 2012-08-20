@@ -324,7 +324,7 @@ var server = {
 }
 
 
-function init() {
+window.addEventListener('load', function() {
   window.scroll(0, 0);
 
   // items:
@@ -361,5 +361,5 @@ function init() {
     },
   });
   historic.init();
-}
+}, false);
 

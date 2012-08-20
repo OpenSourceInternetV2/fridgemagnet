@@ -52,6 +52,9 @@ function seek (rq, r, list, dn) {
     if(s)
       return;
 
+    list.sort(function(a, b) { return a.sta.see < b.sta.stee;  } );
+    list = list.splice(0, cfg.maxResults);
+
     if(!cache[dn])
       cache[dn] = { dat: Date.now(), res: list };
 
@@ -106,23 +109,20 @@ function search(rq, r, q) {
       delete cache[dn];
   }
 
-//  var policy = {};
+
   var o = [];
-/*  var incl[];
+/*  var excl = [];
 
-  for(var i = 0; i < q.length; i++)
-    if(q[i][0] == '-')
+  for(var i = 0; i < q.length; i++) {
+    if(q[i][0] == '-') {
       excl.push(q[i].substr(1));
-    else
-      incl.push(q[i]);
+      q[i] = excl.back();
+    }
+  }*/
 
-//  q = { kwd: {} };
-  if(incl.length)*/
-    o = { _id: { $in: q}};
-/*  if(excl.length)
-    q.kwd.$nin = excl;*/
+  o = { _id: { $in: q}};
 
-  db.terms.find(o, { m: 1 }, { limit: 9 })
+  db.terms.find(o, { m: { $slice: 10000 } }, { limit: 9 })
   .toArray(function (err, list) {
     if(err || !list.length || list.length != q.length) {
       r.end('[]');
@@ -131,13 +131,17 @@ function search(rq, r, q) {
 
     var id = 0;
     var min = list[0].m.length;
-    for(var i = 1; i < list.length; i++)
+    for(var i = 1; i < list.length; i++) {
+/*      if(excl.indexOf(list[i]._id) != -1)
+        list[i].excl = 1; */
       if(list[i].m.length < min) {
         id = i;
         min = list[i].m.length;
       }
+    }
 
     var res = [];
+    var res2 = [];
     var ms = list[id].m;
 
     if(ms.length <= cfg.maxResults)
@@ -147,38 +151,45 @@ function search(rq, r, q) {
        */
       for(var i = 1; i < ms.length; i++) {
         var d = ms[i];
-        var f = true;
+        var score = 1;
         /*  for each term
          */
         for(var j = 0; j < list.length; j++) {
           if(j == id)
             continue;
 
-          if(list[j].m.indexOf(d) == -1) {
-            f = false;
-            break;
-          }
+          if(list[j].m.indexOf(d) != -1) // && !list[j].excl)
+            score++;
         }
 
-        if(f)
+        if(score == list.length)
           res.push(new ObjectID(d));
+        else
+          if(score >= list.length / 2)
+            res2.push(new ObjectID(d));
       }
+
+    if(list.length == 1 && res.length > cfg.results * 4)
+      res = res.splice(0, cfg.results);
 
     //free resources
     delete list;
     delete ms;
 
     if(!res.length) {
-      r.end('[]');
-      return;
+      if(res2.length)
+        res = res2;
+      else {
+        r.end('[]');
+        return;
+      }
     }
 
-    db.magnets.find({ _id: { $in: res }}, { limit: cfg.maxResults })
-    .sort({ 'sta.see': -1 })
+    db.magnets.find({ _id: { $in: res }}, { src: { $slice: -7 }}, { limit: cfg.maxResults * 2 })
+//    .sort({ 'sta.see': -1 })
     .toArray(function (err, list) {
         if(err || !list.length)
           return noRes(r);
-
         seek(rq, r, list, dn);
     });
   });
